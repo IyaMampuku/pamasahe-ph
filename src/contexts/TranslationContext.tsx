@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { dictionary, type Language, type Dictionary } from '../utils/dictionary';
 
 interface TranslationContextType {
@@ -10,17 +10,13 @@ interface TranslationContextType {
 const TranslationContext = createContext<TranslationContextType | undefined>(undefined);
 
 export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [lang, setLang] = useState<Language>('en');
-
-  useEffect(() => {
+  const [lang, setLangState] = useState<Language>(() => {
     const saved = localStorage.getItem('pamasahe-lang') as Language;
-    if (saved && (saved === 'en' || saved === 'tl')) {
-      setLang(saved);
-    }
-  }, []);
+    return (saved && (saved === 'en' || saved === 'tl')) ? saved : 'en';
+  });
 
   const handleSetLang = (newLang: Language) => {
-    setLang(newLang);
+    setLangState(newLang);
     localStorage.setItem('pamasahe-lang', newLang);
   };
 
@@ -31,6 +27,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTranslation = () => {
   const context = useContext(TranslationContext);
   if (!context) throw new Error('useTranslation must be used within TranslationProvider');

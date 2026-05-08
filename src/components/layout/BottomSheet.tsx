@@ -27,10 +27,12 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       controls.start({ y: calculateY(currentSnap) });
     } else {
       controls.start({ y: '100vh' });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentSnap, controls, snapPoints]);
 
   const onDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
