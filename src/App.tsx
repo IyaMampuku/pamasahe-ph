@@ -17,7 +17,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 export const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/pamasahe-ph">
       <Routes>
         <Route path="/" element={<Splash />} />
         <Route path="/language" element={<Language />} />
