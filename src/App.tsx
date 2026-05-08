@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Splash } from './pages/Splash';
 import { Language } from './pages/Language';
 import { Auth } from './pages/Auth';
+import { Signup } from './pages/Signup';
 import { Home } from './pages/Home';
 import { Search } from './pages/Search';
 import { Results } from './pages/Results';
@@ -22,6 +23,7 @@ export const App: React.FC = () => {
         <Route path="/" element={<Splash />} />
         <Route path="/language" element={<Language />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/signup" element={<Signup />} />
         
         {/* Protected Routes */}
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />

@@ -25,7 +25,11 @@ export const dictionary = {
       or: "or continue with",
       forgotPassword: "Forgot Password?",
       noAccount: "Don't have an account?",
-      socialLogin: "Log In with"
+      socialLogin: "Log In with",
+      name: "Full Name",
+      email: "Email Address",
+      confirmPassword: "Confirm Password",
+      haveAccount: "Already have an account?"
     },
     home: {
       whereTo: "Where to?",
@@ -73,7 +77,11 @@ export const dictionary = {
       or: "o magpatuloy gamit ang",
       forgotPassword: "Nakalimutan ang Password?",
       noAccount: "Wala pang account?",
-      socialLogin: "Mag-log In gamit ang"
+      socialLogin: "Mag-log In gamit ang",
+      name: "Buong Pangalan",
+      email: "Email Address",
+      confirmPassword: "Kumpirmahin ang Password",
+      haveAccount: "May account na?"
     },
     home: {
       whereTo: "Saan tayo?",
