@@ -7,8 +7,8 @@ export const BottomNav: React.FC = () => {
   const location = useLocation();
 
   const navItems = [
-    { icon: <Map size={24} />, label: 'Explore', path: '/home' },
-    { icon: <User size={24} />, label: 'You', path: '/profile' },
+    { icon: <Map size={22} />, label: 'Explore', path: '/home' },
+    { icon: <User size={22} />, label: 'You', path: '/profile' },
   ];
 
   return (
@@ -24,7 +24,7 @@ export const BottomNav: React.FC = () => {
             }`}
           >
             <div className={`p-1.5 rounded-xl transition-colors ${isActive ? 'bg-[#1a00b2]/10' : ''}`}>
-              {React.cloneElement(item.icon as React.ReactElement, { size: 22 })}
+              {item.icon}
             </div>
             <span className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${isActive ? 'opacity-100' : 'opacity-60'}`}>
               {item.label}

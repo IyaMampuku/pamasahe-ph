@@ -7,7 +7,7 @@ import { useDebounce } from '../hooks/useDebounce';
 
 export const Search: React.FC = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  useTranslation();
   
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, 500);
