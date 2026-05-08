@@ -86,7 +86,7 @@ export const AIChatbot: React.FC = () => {
     <>
       {/* Floating Action Button */}
       <AnimatePresence>
-        {routerLocation.pathname === '/home' && !isOpen && (
+        {(routerLocation.pathname === '/home' || routerLocation.pathname === '/trip') && !isOpen && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -94,7 +94,7 @@ export const AIChatbot: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-48 right-4 z-10 w-14 h-14 bg-[#1a00b2] text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center border-2 border-white/20"
+            className="fixed bottom-48 right-4 z-[100] w-14 h-14 bg-[#1a00b2] text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center border-2 border-white/20"
           >
             <MessageCircle size={28} />
           </motion.button>

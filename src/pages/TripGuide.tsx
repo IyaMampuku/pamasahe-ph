@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation as useRouteLocation } from 'react-router-dom';
-import { ArrowLeft, MessageSquare, Truck, Bus, Train, Bike, Star } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Truck, Bus, Train, Bike, Star, Crosshair } from 'lucide-react';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useLocation, type Coordinates } from '../contexts/LocationContext';
 import { getRoute, type RouteData, type NominatimResult } from '../services/api';
@@ -10,12 +10,20 @@ import { BottomSheet } from '../components/layout/BottomSheet';
 type VehicleType = 'jeepney' | 'bus' | 'train' | 'tricycle' | null;
 type FareType = 'regular' | 'discounted';
 
+const VEHICLE_COLORS: Record<string, string> = {
+  jeepney: '#16a34a',
+  bus: '#dc2626',
+  tricycle: '#2563eb',
+  train: '#eab308',
+  recommended: '#1a00b2'
+};
+
 const VEHICLES = [
-  { id: 'recommended', label: 'Recommended', icon: Star, color: 'bg-[#1a00b2]', text: 'text-[#1a00b2]', bg: 'bg-blue-50' },
-  { id: 'jeepney', label: 'Jeepney', icon: Truck, color: 'bg-green-600', text: 'text-green-600', bg: 'bg-green-50' },
-  { id: 'bus', label: 'Bus', icon: Bus, color: 'bg-red-600', text: 'text-red-600', bg: 'bg-red-50' },
-  { id: 'train', label: 'LRT/MRT', icon: Train, color: 'bg-purple-600', text: 'text-purple-600', bg: 'bg-purple-50' },
-  { id: 'tricycle', label: 'Tricycle', icon: Bike, color: 'bg-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
+  { id: 'recommended', label: 'Recommended', icon: Star, color: 'bg-[#1a00b2]', text: 'text-[#1a00b2]', bg: 'bg-blue-50', pill: 'bg-[#1a00b2] text-white' },
+  { id: 'jeepney', label: 'Jeepney', icon: Truck, color: 'bg-green-600', text: 'text-green-600', bg: 'bg-green-50', pill: 'bg-green-600 text-white' },
+  { id: 'bus', label: 'Bus', icon: Bus, color: 'bg-red-600', text: 'text-red-600', bg: 'bg-red-50', pill: 'bg-red-600 text-white' },
+  { id: 'train', label: 'LRT/MRT', icon: Train, color: 'bg-purple-600', text: 'text-purple-600', bg: 'bg-purple-50', pill: 'bg-yellow-500 text-white' },
+  { id: 'tricycle', label: 'Tricycle', icon: Bike, color: 'bg-blue-600', text: 'text-blue-600', bg: 'bg-blue-50', pill: 'bg-blue-600 text-white' },
 ];
 
 const FARES: Record<string, number> = {
@@ -30,7 +38,7 @@ export const TripGuide: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const routeLocation = useRouteLocation();
-  const { location } = useLocation();
+  const { location, locateMe } = useLocation();
   
   const destination = routeLocation.state?.destination as NominatimResult;
   const [routeData, setRouteData] = useState<RouteData | null>(null);
@@ -62,6 +70,7 @@ export const TripGuide: React.FC = () => {
   const activeVehicleConfig = VEHICLES.find(v => v.id === activeVehicleId)!;
 
   const vehicleName = selectedVehicle === null ? 'Jeepney' : activeVehicleConfig.label;
+  const routeColor = VEHICLE_COLORS[activeVehicleId];
 
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-100 overflow-hidden relative">
@@ -79,8 +88,19 @@ export const TripGuide: React.FC = () => {
           center={mapCenter} 
           markers={[{ position: mapCenter }, { position: destCoords }]}
           route={routeData?.geometry}
-          zoom={13}
+          routeColor={routeColor}
+          zoom={15}
         />
+      </div>
+
+      {/* Floating Center Button */}
+      <div className="absolute bottom-64 right-4 z-[90]">
+        <button 
+          onClick={locateMe}
+          className="w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-2xl text-[#1a00b2] border border-gray-50 active:scale-90 transition-transform"
+        >
+          <Crosshair size={28} />
+        </button>
       </div>
 
       <BottomSheet 
@@ -168,7 +188,12 @@ export const TripGuide: React.FC = () => {
                   <MessageSquare size={20} className={`${activeVehicleConfig.text} shrink-0 mt-0.5`} />
                   <div>
                     <p className={`text-[10px] font-bold ${activeVehicleConfig.text} uppercase tracking-wider mb-1 opacity-80`}>What to say</p>
-                    <p className={`font-bold ${activeVehicleConfig.text} text-sm`}>"{t.trip.bayadPrompt} {destName}."</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`px-2 py-1 rounded-md text-xs font-bold ${activeVehicleConfig.pill}`}>
+                        {vehicleName}
+                      </span>
+                      <p className={`font-bold ${activeVehicleConfig.text} text-sm`}>"{t.trip.bayadPrompt} {destName}."</p>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -31,6 +31,7 @@ interface LeafletMapProps {
   center: Coordinates;
   markers?: { position: Coordinates; popup?: string }[];
   route?: Coordinates[];
+  routeColor?: string;
   zoom?: number;
   className?: string;
 }
@@ -39,6 +40,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   center,
   markers = [],
   route = [],
+  routeColor = "#1a00b2",
   zoom = 14,
   className = "w-full h-full z-0"
 }) => {
@@ -61,7 +63,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         ))}
         
         {route.length > 0 && (
-          <Polyline positions={route} color="#1a00b2" weight={5} opacity={0.8} />
+          <Polyline positions={route} color={routeColor} weight={6} opacity={0.8} />
         )}
       </MapContainer>
     </div>
