@@ -63,7 +63,13 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         ))}
         
         {route.length > 0 && (
-          <Polyline positions={route} color={routeColor} weight={6} opacity={0.8} />
+          <Polyline 
+            key={`route-${routeColor}-${route.length}`}
+            positions={route} 
+            color={routeColor} 
+            weight={6} 
+            opacity={0.8} 
+          />
         )}
       </MapContainer>
     </div>
