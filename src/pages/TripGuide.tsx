@@ -15,6 +15,7 @@ export const TripGuide: React.FC = () => {
   
   const destination = routeLocation.state?.destination as NominatimResult;
   const [routeData, setRouteData] = useState<RouteData | null>(null);
+  const [snapIndex, setSnapIndex] = useState(1);
 
   useEffect(() => {
     if (location && destination) {
@@ -43,7 +44,7 @@ export const TripGuide: React.FC = () => {
         </button>
       </div>
 
-      <div className="h-[40vh] w-full relative z-0">
+      <div className="h-full w-full relative z-0">
         <LeafletMap 
           center={mapCenter} 
           markers={[{ position: mapCenter }, { position: destCoords }]}
@@ -52,10 +53,27 @@ export const TripGuide: React.FC = () => {
         />
       </div>
 
-      <BottomSheet isOpen={true} snapPoints={[65, 85]} initialSnap={0}>
+      <BottomSheet 
+        isOpen={true} 
+        snapPoints={[12, 65, 85]} 
+        initialSnap={1}
+        onSnapChange={setSnapIndex}
+      >
         <div className="space-y-6 pt-2 pb-20">
           <div className="flex items-center justify-between border-b pb-4">
-            <h2 className="text-xl font-bold text-[#1a00b2]">Trip Overview</h2>
+            <div className="flex items-center space-x-3">
+              {snapIndex === 0 && (
+                <div className="flex items-center space-x-1.5">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                  </span>
+                </div>
+              )}
+              <h2 className={`text-xl font-bold transition-colors duration-300 ${snapIndex === 0 ? 'text-green-600' : 'text-[#1a00b2]'}`}>
+                {snapIndex === 0 ? 'In Route' : 'Trip Overview'}
+              </h2>
+            </div>
             <span className="bg-[#f2ca4b] text-[#1a00b2] px-3 py-1 rounded-full text-sm font-bold">
               PHP 25
             </span>

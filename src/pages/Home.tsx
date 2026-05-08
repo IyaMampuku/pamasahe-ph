@@ -49,7 +49,7 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Bottom Floating Button */}
-      <div className="absolute bottom-28 right-4 z-10">
+      <div className="absolute bottom-40 right-4 z-10">
         <button 
           onClick={locateMe}
           className="w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-2xl text-[#1a00b2] border border-gray-50 active:scale-90 transition-transform"
@@ -58,8 +58,36 @@ export const Home: React.FC = () => {
         </button>
       </div>
 
+      <BottomSheet isOpen={true} snapPoints={[20, 50, 85]} initialSnap={0}>
+        <div className="space-y-6 pt-2 pb-32">
+          <div className="flex items-center justify-between border-b pb-4">
+            <h2 className="text-xl font-bold text-[#1a00b2]">{t.home.whereTo}</h2>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="px-1 text-xs font-bold text-gray-400 uppercase tracking-widest">Recent Trips</div>
+            <RecentItem label="SM Mall of Asia" sub="Pasay City" />
+            <RecentItem label="Intramuros" sub="Manila" />
+            <RecentItem label="Ayala Malls Manila Bay" sub="Parañaque" />
+          </div>
+        </div>
+      </BottomSheet>
+
       <BottomNav />
     </div>
   );
 };
+
+const RecentItem: React.FC<{ label: string; sub: string }> = ({ label, sub }) => (
+  <button className="w-full flex items-center p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mr-4 shadow-sm text-[#1a00b2]">
+      <Search size={20} />
+    </div>
+    <div className="text-left">
+      <p className="font-bold text-gray-800">{label}</p>
+      <p className="text-xs text-gray-500">{sub}</p>
+    </div>
+  </button>
+);
+
 

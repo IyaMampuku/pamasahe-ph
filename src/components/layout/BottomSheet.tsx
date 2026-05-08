@@ -7,6 +7,7 @@ interface BottomSheetProps {
   onClose?: () => void;
   snapPoints?: number[]; // Percentage of screen height, e.g. [30, 70]
   initialSnap?: number;
+  onSnapChange?: (index: number) => void;
 }
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({ 
@@ -14,7 +15,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   isOpen, 
   onClose,
   snapPoints = [30, 70],
-  initialSnap = 0
+  initialSnap = 0,
+  onSnapChange
 }) => {
   const controls = useAnimation();
   const [currentSnap, setCurrentSnap] = useState(initialSnap);
@@ -52,7 +54,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       newSnap = Math.min(snapPoints.length - 1, currentSnap + 1);
     }
 
-    setCurrentSnap(newSnap);
+    if (newSnap !== currentSnap) {
+      setCurrentSnap(newSnap);
+      onSnapChange?.(newSnap);
+    }
     controls.start({ y: calculateY(newSnap), transition: { type: 'spring', bounce: 0, duration: 0.4 } });
   };
 
