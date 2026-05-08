@@ -1,11 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation as useRouteLocation } from 'react-router-dom';
-import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Truck, Bus, Train, Bike, Star } from 'lucide-react';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useLocation, type Coordinates } from '../contexts/LocationContext';
 import { getRoute, type RouteData, type NominatimResult } from '../services/api';
 import { LeafletMap } from '../components/map/LeafletMap';
 import { BottomSheet } from '../components/layout/BottomSheet';
+
+type VehicleType = 'jeepney' | 'bus' | 'train' | 'tricycle' | null;
+type FareType = 'regular' | 'discounted';
+
+const VEHICLES = [
+  { id: 'recommended', label: 'Recommended', icon: Star, color: 'bg-[#1a00b2]', text: 'text-[#1a00b2]', bg: 'bg-blue-50' },
+  { id: 'jeepney', label: 'Jeepney', icon: Truck, color: 'bg-green-600', text: 'text-green-600', bg: 'bg-green-50' },
+  { id: 'bus', label: 'Bus', icon: Bus, color: 'bg-red-600', text: 'text-red-600', bg: 'bg-red-50' },
+  { id: 'train', label: 'LRT/MRT', icon: Train, color: 'bg-purple-600', text: 'text-purple-600', bg: 'bg-purple-50' },
+  { id: 'tricycle', label: 'Tricycle', icon: Bike, color: 'bg-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
+];
+
+const FARES: Record<string, number> = {
+  jeepney: 13,
+  bus: 15,
+  train: 20,
+  tricycle: 25,
+  recommended: 13
+};
 
 export const TripGuide: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +35,9 @@ export const TripGuide: React.FC = () => {
   const destination = routeLocation.state?.destination as NominatimResult;
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [snapIndex, setSnapIndex] = useState(1);
+  
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleType>(null);
+  const [fareType, setFareType] = useState<FareType>('regular');
 
   useEffect(() => {
     if (location && destination) {
@@ -32,6 +54,14 @@ export const TripGuide: React.FC = () => {
 
   const destCoords: Coordinates = [parseFloat(destination.lat), parseFloat(destination.lon)];
   const mapCenter = location || destCoords;
+  const destName = destination.display_name.split(',')[0];
+
+  const activeVehicleId = selectedVehicle || 'recommended';
+  const baseFare = FARES[activeVehicleId];
+  const currentFare = fareType === 'regular' ? baseFare : Math.round(baseFare * 0.8);
+  const activeVehicleConfig = VEHICLES.find(v => v.id === activeVehicleId)!;
+
+  const vehicleName = selectedVehicle === null ? 'Jeepney' : activeVehicleConfig.label;
 
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-100 overflow-hidden relative">
@@ -59,8 +89,30 @@ export const TripGuide: React.FC = () => {
         initialSnap={1}
         onSnapChange={setSnapIndex}
       >
-        <div className="space-y-6 pt-2 pb-20">
-          <div className="flex items-center justify-between border-b pb-4">
+        <div className="space-y-6 pt-2 pb-20 px-2">
+          
+          {/* Route Filter (Horizontal Scroll) */}
+          <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 border-b border-gray-100">
+            {VEHICLES.map(v => {
+              const isSelected = (selectedVehicle === null && v.id === 'recommended') || selectedVehicle === v.id;
+              return (
+                <button 
+                  key={v.id}
+                  onClick={() => setSelectedVehicle(v.id === 'recommended' ? null : v.id as VehicleType)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-full border transition-colors shrink-0 ${
+                    isSelected
+                      ? `${v.color} text-white border-transparent`
+                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <v.icon size={16} />
+                  <span className="text-sm font-bold">{v.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3">
               {snapIndex === 0 && (
                 <div className="flex items-center space-x-1.5">
@@ -74,30 +126,49 @@ export const TripGuide: React.FC = () => {
                 {snapIndex === 0 ? 'In Route' : 'Trip Overview'}
               </h2>
             </div>
-            <span className="bg-[#f2ca4b] text-[#1a00b2] px-3 py-1 rounded-full text-sm font-bold">
-              PHP 25
-            </span>
+            
+            <div className="flex flex-col items-end">
+              <span className="bg-[#f2ca4b] text-[#1a00b2] px-3 py-1 rounded-full text-sm font-bold shadow-sm">
+                PHP {currentFare}
+              </span>
+              
+              {/* Fare Engine Tabs */}
+              <div className="flex bg-gray-100 p-0.5 rounded-lg mt-2 shadow-inner border border-gray-200/50">
+                <button 
+                  onClick={() => setFareType('regular')}
+                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${fareType === 'regular' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
+                >
+                  Regular
+                </button>
+                <button 
+                  onClick={() => setFareType('discounted')}
+                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${fareType === 'discounted' ? 'bg-white shadow text-[#1a00b2]' : 'text-gray-500'}`}
+                >
+                  Discounted
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Step 1 */}
+          {/* Dynamic Trip Card - Step 1 */}
           <div className="flex space-x-4">
             <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-[#1a00b2] text-white flex items-center justify-center font-bold text-sm">
-                1
+              <div className={`w-8 h-8 rounded-full ${activeVehicleConfig.color} text-white flex items-center justify-center font-bold text-sm shadow-sm`}>
+                <activeVehicleConfig.icon size={16} />
               </div>
               <div className="w-0.5 h-full bg-gray-200 my-2"></div>
             </div>
             <div className="flex-1 pb-6">
-              <p className="font-bold text-lg">Jeepney to Heritage</p>
-              <p className="text-gray-500 text-sm mb-3">Wait along the main road. Any jeep with "Baclaran" sign.</p>
+              <p className="font-bold text-lg text-gray-800">{vehicleName} to {destName}</p>
+              <p className="text-gray-500 text-sm mb-3">Wait along the main road. Take the {vehicleName} route.</p>
               
-              <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-[#1a00b2]"></div>
+              <div className={`${activeVehicleConfig.bg} border border-gray-100 p-4 rounded-2xl relative overflow-hidden shadow-sm`}>
+                <div className={`absolute top-0 left-0 w-1.5 h-full ${activeVehicleConfig.color}`}></div>
                 <div className="flex items-start space-x-3">
-                  <MessageSquare size={20} className="text-[#1a00b2] shrink-0 mt-0.5" />
+                  <MessageSquare size={20} className={`${activeVehicleConfig.text} shrink-0 mt-0.5`} />
                   <div>
-                    <p className="text-xs font-bold text-[#1a00b2] uppercase tracking-wider mb-1">What to say</p>
-                    <p className="font-medium">"{t.trip.bayadPrompt} Heritage."</p>
+                    <p className={`text-[10px] font-bold ${activeVehicleConfig.text} uppercase tracking-wider mb-1 opacity-80`}>What to say</p>
+                    <p className={`font-bold ${activeVehicleConfig.text} text-sm`}>"{t.trip.bayadPrompt} {destName}."</p>
                   </div>
                 </div>
               </div>
@@ -107,19 +178,19 @@ export const TripGuide: React.FC = () => {
           {/* Step 2 */}
           <div className="flex space-x-4">
             <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-[#1a00b2] text-white flex items-center justify-center font-bold text-sm">
+              <div className={`w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center font-bold text-sm shadow-sm`}>
                 2
               </div>
             </div>
             <div className="flex-1">
-              <p className="font-bold text-lg">Walk to Destination</p>
-              <p className="text-gray-500 text-sm">Approx. 5 mins walk.</p>
+              <p className="font-bold text-lg text-gray-800">Walk to Destination</p>
+              <p className="text-gray-500 text-sm">Arrive at {destName}.</p>
             </div>
           </div>
           
           <button 
             onClick={() => navigate('/home')}
-            className="w-full mt-8 bg-red-50 text-red-600 font-bold py-4 rounded-2xl border border-red-100"
+            className="w-full mt-8 bg-gray-900 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform shadow-md"
           >
             {t.trip.finish}
           </button>
