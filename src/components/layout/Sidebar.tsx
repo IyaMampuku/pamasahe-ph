@@ -10,7 +10,7 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-type ModalType = 'language' | 'privacy' | 'help' | null;
+type ModalType = 'language' | 'privacy' | 'help' | 'profile' | 'settings' | null;
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { lang, setLang } = useTranslation();
@@ -58,7 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
                       <User size={32} className="text-white" />
                     </div>
-                    <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#f2ca4b] rounded-full flex items-center justify-center shadow-lg text-[#1a00b2] border-2 border-[#1a00b2]">
+                    <button onClick={() => setActiveModal('profile')} className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#f2ca4b] rounded-full flex items-center justify-center shadow-lg text-[#1a00b2] border-2 border-[#1a00b2] active:scale-95 transition-transform">
                       <Edit2 size={14} className="font-bold" />
                     </button>
                   </div>
@@ -73,8 +73,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               {/* Menu Items */}
               <div className="flex-1 overflow-y-auto py-4">
                 <div className="px-4 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Account</div>
-                <MenuItem icon={<User size={20} />} label="My Profile" onClick={() => {}} />
-                <MenuItem icon={<Settings size={20} />} label="Settings" onClick={() => {}} />
+                <MenuItem icon={<User size={20} />} label="My Profile" onClick={() => setActiveModal('profile')} />
+                <MenuItem icon={<Settings size={20} />} label="Settings" onClick={() => setActiveModal('settings')} />
                 
                 <div className="px-4 mt-6 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Preferences</div>
                 <button 
@@ -127,6 +127,76 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
             >
+              {activeModal === 'profile' && (
+                <div className="p-6">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-3 bg-blue-50 text-[#1a00b2] rounded-2xl">
+                      <User size={24} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">Edit Profile</h3>
+                  </div>
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Full Name</label>
+                      <input type="text" defaultValue="Admin User" className="w-full mt-1 p-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:border-[#1a00b2] focus:ring-1 focus:ring-[#1a00b2] transition-colors" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email Address</label>
+                      <input type="email" defaultValue="admin@pamasahe.ph" className="w-full mt-1 p-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:border-[#1a00b2] focus:ring-1 focus:ring-[#1a00b2] transition-colors" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Phone Number</label>
+                      <input type="tel" defaultValue="+63 912 345 6789" className="w-full mt-1 p-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:border-[#1a00b2] focus:ring-1 focus:ring-[#1a00b2] transition-colors" />
+                    </div>
+                  </div>
+                  <div className="flex space-x-3">
+                    <button onClick={() => setActiveModal(null)} className="flex-1 py-4 bg-gray-100 text-gray-700 font-bold rounded-2xl active:scale-95 transition-transform">Cancel</button>
+                    <button onClick={() => setActiveModal(null)} className="flex-1 py-4 bg-[#1a00b2] text-white font-bold rounded-2xl active:scale-95 transition-transform">Save</button>
+                  </div>
+                </div>
+              )}
+
+              {activeModal === 'settings' && (
+                <div className="p-6">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-3 bg-blue-50 text-[#1a00b2] rounded-2xl">
+                      <Settings size={24} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">Settings</h3>
+                  </div>
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center justify-between p-2">
+                      <div>
+                        <p className="font-bold text-gray-800">Push Notifications</p>
+                        <p className="text-xs text-gray-500">Get updates on your routes</p>
+                      </div>
+                      <div className="w-12 h-6 bg-[#1a00b2] rounded-full p-1 cursor-pointer flex justify-end">
+                        <div className="w-4 h-4 bg-white rounded-full shadow-sm"></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-2">
+                      <div>
+                        <p className="font-bold text-gray-800">Location Services</p>
+                        <p className="text-xs text-gray-500">Required for routing</p>
+                      </div>
+                      <div className="w-12 h-6 bg-[#1a00b2] rounded-full p-1 cursor-pointer flex justify-end">
+                        <div className="w-4 h-4 bg-white rounded-full shadow-sm"></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-2">
+                      <div>
+                        <p className="font-bold text-gray-800">Dark Mode</p>
+                        <p className="text-xs text-gray-500">Currently syncs with system</p>
+                      </div>
+                      <div className="w-12 h-6 bg-gray-200 rounded-full p-1 cursor-pointer flex justify-start">
+                        <div className="w-4 h-4 bg-white rounded-full shadow-sm"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={() => setActiveModal(null)} className="w-full py-4 bg-[#1a00b2] text-white font-bold rounded-2xl active:scale-95 transition-transform">Done</button>
+                </div>
+              )}
+
               {activeModal === 'language' && (
                 <div className="p-6">
                   <div className="flex items-center space-x-3 mb-6">
