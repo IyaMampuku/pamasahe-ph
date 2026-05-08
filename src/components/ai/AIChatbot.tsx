@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, MapPin, Bus, DollarSign, Gift } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 type Message = {
   id: string;
@@ -10,6 +11,7 @@ type Message = {
 };
 
 export const AIChatbot: React.FC = () => {
+  const routerLocation = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: 'init', sender: 'ai', text: 'Hi! I am the Pamasahe PH Assistant. How can I help you today?' }
@@ -83,14 +85,21 @@ export const AIChatbot: React.FC = () => {
   return (
     <>
       {/* Floating Action Button */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-4 z-[90] w-14 h-14 bg-[#1a00b2] text-white rounded-full shadow-2xl flex items-center justify-center border-2 border-white/20"
-      >
-        <MessageCircle size={28} />
-      </motion.button>
+      <AnimatePresence>
+        {routerLocation.pathname === '/home' && !isOpen && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsOpen(true)}
+            className="fixed bottom-32 right-4 z-[90] w-14 h-14 bg-[#1a00b2] text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center border-2 border-white/20"
+          >
+            <MessageCircle size={28} />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Chat Window Overlay */}
       <AnimatePresence>
