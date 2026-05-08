@@ -1,84 +1,92 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation as useRouteLocation } from 'react-router-dom';
 import {
-  ArrowLeft, MessageSquare, Truck, Bus, Train, Bike, Star, Crosshair, MapPin, AlertCircle
+  ArrowLeft, MessageSquare, Crosshair, AlertCircle, ChevronsRight
 } from 'lucide-react';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useLocation, type Coordinates } from '../contexts/LocationContext';
 import { getRoute, type RouteData, type NominatimResult } from '../services/api';
 import { LeafletMap } from '../components/map/LeafletMap';
 import { BottomSheet } from '../components/layout/BottomSheet';
-import type { TransitPlan, RouteLeg } from '../services/TransitLogic';
+import { splitGeometry } from '../services/TransitLogic';
+import type { RouteOption, RouteLeg } from '../services/TransitLogic';
 
-type VehicleType = 'jeepney' | 'bus' | 'train' | 'tricycle' | null;
-type FareType = 'regular' | 'discounted';
+// ── Style helpers ───────────────────────────────────────────────────
 
-// ─── Color / Style Maps ────────────────────────────────────────────────────────
-
-const VEHICLE_COLORS: Record<string, string> = {
-  jeepney: '#16a34a',
-  bus:     '#dc2626',
-  tricycle:'#2563eb',
-  train:   '#eab308',
-  recommended: '#1a00b2',
+const VEHICLE_BG: Record<string, string> = {
+  jeepney:  'bg-green-50  border-green-400/40',
+  bus:      'bg-red-50    border-red-400/40',
+  tricycle: 'bg-blue-50   border-blue-400/40',
+  train:    'bg-yellow-50 border-yellow-400/40',
+};
+const VEHICLE_TEXT: Record<string, string> = {
+  jeepney:  'text-green-700',
+  bus:      'text-red-700',
+  tricycle: 'text-blue-700',
+  train:    'text-yellow-700',
+};
+const VEHICLE_PILL: Record<string, string> = {
+  jeepney:  'bg-green-600 text-white',
+  bus:      'bg-red-600   text-white',
+  tricycle: 'bg-blue-600  text-white',
+  train:    'bg-yellow-500 text-white',
 };
 
-const VEHICLE_STYLES: Record<string, {
-  icon: React.ElementType;
-  color: string; text: string; bg: string; pill: string; border: string;
-}> = {
-  recommended: { icon: Star,  color: 'bg-[#1a00b2]', text: 'text-[#1a00b2]', bg: 'bg-blue-50',   pill: 'bg-[#1a00b2] text-white', border: 'border-[#1a00b2]' },
-  jeepney:     { icon: Truck, color: 'bg-green-600',  text: 'text-green-600',  bg: 'bg-green-50',  pill: 'bg-green-600 text-white',  border: 'border-green-400' },
-  bus:         { icon: Bus,   color: 'bg-red-600',    text: 'text-red-600',    bg: 'bg-red-50',    pill: 'bg-red-600 text-white',    border: 'border-red-400' },
-  train:       { icon: Train, color: 'bg-purple-600', text: 'text-purple-600', bg: 'bg-purple-50', pill: 'bg-yellow-500 text-white',  border: 'border-yellow-400' },
-  tricycle:    { icon: Bike,  color: 'bg-blue-600',   text: 'text-blue-600',   bg: 'bg-blue-50',   pill: 'bg-blue-600 text-white',   border: 'border-blue-400' },
-};
+// ── Leg Card Sub-component ──────────────────────────────────────────
 
-const BASE_FARES: Record<string, number> = {
-  jeepney: 13, bus: 15, train: 20, tricycle: 25, recommended: 13,
-};
+interface LegCardProps {
+  leg:      RouteLeg;
+  isActive: boolean;
+}
 
-const ALL_VEHICLES = ['recommended', 'jeepney', 'bus', 'train', 'tricycle'];
+const LegCard: React.FC<LegCardProps> = ({ leg, isActive }) => {
+  const bg   = VEHICLE_BG[leg.vehicle]   ?? 'bg-gray-50 border-gray-200';
+  const text = VEHICLE_TEXT[leg.vehicle] ?? 'text-gray-700';
+  const pill = VEHICLE_PILL[leg.vehicle] ?? 'bg-gray-600 text-white';
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
-
-const LegCard: React.FC<{ leg: RouteLeg }> = ({ leg }) => {
-  const style = VEHICLE_STYLES[leg.vehicle] ?? VEHICLE_STYLES.recommended;
-  const Icon = style.icon;
   return (
-    <div className="flex space-x-4">
+    <div className={`flex space-x-4 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-50'}`}>
+      {/* Step dot + connector */}
       <div className="flex flex-col items-center">
-        <div className={`w-9 h-9 rounded-full ${style.color} text-white flex items-center justify-center shadow-sm shrink-0`}>
-          <Icon size={18} />
+        <div
+          className="w-9 h-9 rounded-full text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0"
+          style={{ backgroundColor: leg.color }}
+        >
+          {leg.step}
         </div>
-        <div className="w-0.5 flex-1 bg-gray-200 my-2" />
+        <div className="w-0.5 flex-1 mt-2" style={{ backgroundColor: leg.color + '40' }} />
       </div>
-      <div className="flex-1 pb-6">
-        {/* Leg header */}
-        <div className="flex items-center justify-between mb-1">
-          <p className="font-bold text-base text-gray-800">
-            {leg.vehicleLabel} → <span className="text-[#1a00b2]">{leg.to}</span>
-          </p>
-          <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
-            leg.fareType === 'special'
-              ? 'bg-amber-100 text-amber-700 border border-amber-300'
-              : 'bg-gray-100 text-gray-600'
-          }`}>
-            {leg.fareLabel}
-          </span>
-        </div>
-        <p className="text-gray-400 text-xs mb-3">{leg.from} → {leg.to}</p>
 
-        {/* What to Say */}
-        <div className={`${style.bg} border ${style.border}/30 p-4 rounded-2xl relative overflow-hidden shadow-sm`}>
-          <div className={`absolute top-0 left-0 w-1.5 h-full ${style.color}`} />
+      {/* Content */}
+      <div className="flex-1 pb-5">
+        <div className="flex items-center justify-between mb-1">
+          <p className="font-bold text-gray-800">{leg.vehicleLabel} → <span style={{ color: leg.color }}>{leg.to}</span></p>
+          <span className={`text-[11px] font-black px-2 py-0.5 rounded-full border ${
+            leg.fareType === 'special'
+              ? 'bg-amber-50 text-amber-700 border-amber-300'
+              : 'bg-gray-100 text-gray-500 border-gray-200'
+          }`}>{leg.fareLabel}</span>
+        </div>
+        <p className="text-xs text-gray-400 mb-3">{leg.from} → {leg.to}</p>
+
+        {/* Transfer alert */}
+        {leg.isTransferNode && leg.transferLabel && (
+          <div className="flex items-center space-x-2 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl mb-3">
+            <ChevronsRight size={14} className="text-amber-600 shrink-0" />
+            <p className="text-xs font-bold text-amber-700">{leg.transferLabel}</p>
+          </div>
+        )}
+
+        {/* What to Say box */}
+        <div className={`${bg} border p-4 rounded-2xl relative overflow-hidden shadow-sm`}>
+          <div className="absolute top-0 left-0 w-1.5 h-full rounded-l-2xl" style={{ backgroundColor: leg.color }} />
           <div className="flex items-start space-x-3 pl-1">
-            <MessageSquare size={18} className={`${style.text} shrink-0 mt-0.5`} />
+            <MessageSquare size={17} className={`${text} shrink-0 mt-0.5`} />
             <div>
-              <p className={`text-[10px] font-bold ${style.text} uppercase tracking-wider mb-1 opacity-80`}>What to say</p>
+              <p className={`text-[10px] font-bold ${text} uppercase tracking-wider mb-1.5 opacity-80`}>What to say</p>
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${style.pill}`}>{leg.vehicleLabel}</span>
-                <p className={`font-bold ${style.text} text-sm leading-snug`}>"{leg.whatToSay}"</p>
+                <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${pill}`}>{leg.vehicleLabel}</span>
+                <p className={`font-bold ${text} text-sm leading-snug`}>"{leg.whatToSay}"</p>
               </div>
             </div>
           </div>
@@ -88,66 +96,68 @@ const LegCard: React.FC<{ leg: RouteLeg }> = ({ leg }) => {
   );
 };
 
-// ─── Main Component ─────────────────────────────────────────────────────────────
+// ── Main Page ───────────────────────────────────────────────────────
 
 export const TripGuide: React.FC = () => {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-  const routeLocation = useRouteLocation();
+  const navigate        = useNavigate();
+  const { t }           = useTranslation();
+  const routeLocation   = useRouteLocation();
   const { location, locateMe } = useLocation();
 
-  const destination  = routeLocation.state?.destination as NominatimResult;
-  const transitPlan  = routeLocation.state?.transitPlan as TransitPlan | undefined;
+  const destination      = routeLocation.state?.destination as NominatimResult | undefined;
+  const selectedOption   = routeLocation.state?.selectedOption as RouteOption | undefined;
 
-  const [routeData, setRouteData] = useState<RouteData | null>(null);
-  const [snapIndex, setSnapIndex] = useState(1);
-  const [selectedVehicle, setSelectedVehicle] = useState<VehicleType>(null);
-  const [fareType, setFareType] = useState<FareType>('regular');
+  const [routeData, setRouteData]   = useState<RouteData | null>(null);
+  const [activeStep, setActiveStep] = useState(1);
+  const [snapIndex, setSnapIndex]   = useState(1);
+
+  // Assign geometry paths to legs once OSRM route loads
+  const [enrichedLegs, setEnrichedLegs] = useState<RouteLeg[]>(
+    selectedOption?.legs ?? []
+  );
 
   useEffect(() => {
     if (location && destination) {
-      const destCoords: Coordinates = [parseFloat(destination.lat), parseFloat(destination.lon)];
-      getRoute(location, destCoords).then(data => { if (data) setRouteData(data); });
+      const dest: Coordinates = [parseFloat(destination.lat), parseFloat(destination.lon)];
+      getRoute(location, dest).then(data => {
+        if (!data) return;
+        setRouteData(data);
+
+        // Split geometry proportionally between legs
+        const legs = selectedOption?.legs ?? [];
+        if (legs.length > 0) {
+          const ratios = legs.map(l => l.legRatio);
+          const paths  = splitGeometry(data.geometry, ratios);
+          setEnrichedLegs(legs.map((leg, i) => ({ ...leg, path: paths[i] ?? [] })));
+        }
+      });
     }
-  }, [location, destination]);
+  }, [location, destination, selectedOption]);
 
   if (!destination) return null;
 
   const destCoords: Coordinates = [parseFloat(destination.lat), parseFloat(destination.lon)];
-  const mapCenter  = location || destCoords;
-  const destName   = destination.display_name.split(',')[0];
+  const mapCenter = location || destCoords;
 
-  // Active vehicle for map colour / filter
-  const activeVehicleId = selectedVehicle || 'recommended';
-  const routeColor      = VEHICLE_COLORS[activeVehicleId];
-  const activeStyle     = VEHICLE_STYLES[activeVehicleId];
-  const ActiveIcon      = activeStyle.icon;
+  // Build per-leg map data
+  const mapLegs = enrichedLegs.map(l => ({
+    path: l.path,
+    color: l.color,
+    isTransferNode: l.isTransferNode,
+    transferLabel: l.transferLabel,
+  }));
 
-  // Fare display (respect subdivision special fare override on first leg)
-  const isSubdivisionStart = transitPlan?.startZone?.type === 'subdivision';
-  const baseFare     = BASE_FARES[activeVehicleId];
-  const computedFare = fareType === 'regular' ? baseFare : Math.round(baseFare * 0.8);
-  const displayFare  = isSubdivisionStart && activeVehicleId === 'tricycle' && transitPlan?.fareOverride
-    ? transitPlan.fareOverride
-    : `₱${computedFare}`;
+  // Fallback: if no legs, use full route in brand color
+  const hasLegs = enrichedLegs.length > 0 && enrichedLegs.some(l => l.path.length > 1);
 
-  // Allowed vehicles for filter bar (respect geo-restrictions)
-  const allowedVehicles = transitPlan?.allowedVehicles ?? ALL_VEHICLES;
-
-  // Multi-leg route for subdivision start
-  const hasLegs = transitPlan && transitPlan.legs && transitPlan.legs.length > 0;
-
-  // Simple single-leg "What to Say" (non-subdivision case)
-  const activeVehicleLabel = activeVehicleId === 'recommended' ? 'Jeepney'
-    : activeVehicleId.charAt(0).toUpperCase() + activeVehicleId.slice(1);
-  const simpleWhatToSay = isSubdivisionStart && transitPlan?.legs[0]
-    ? transitPlan.legs[0].whatToSay
-    : `${t.trip.bayadPrompt} ${destName}.`;
+  const totalFareMin = enrichedLegs.reduce((s, l) => s + l.fareMin, 0);
+  const totalFareMax = enrichedLegs.reduce((s, l) => s + l.fareMax, 0);
+  const inSubdivision = enrichedLegs.some(l => l.fareType === 'special');
 
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-100 overflow-hidden relative">
 
-      {/* Back button */}
+      {/* Back */}
       <div className="absolute top-0 inset-x-0 z-10 p-4 pt-6 pointer-events-none">
         <button
           onClick={() => navigate(-1)}
@@ -162,13 +172,14 @@ export const TripGuide: React.FC = () => {
         <LeafletMap
           center={mapCenter}
           markers={[{ position: mapCenter }, { position: destCoords }]}
-          route={routeData?.geometry}
-          routeColor={routeColor}
+          routeLegs={hasLegs ? mapLegs : undefined}
+          route={!hasLegs ? routeData?.geometry : undefined}
+          routeColor="#1a00b2"
           zoom={15}
         />
       </div>
 
-      {/* Floating Center Button (behind sheet) */}
+      {/* Center Button (behind sheet) */}
       <div className="absolute bottom-64 right-4 z-10">
         <button
           onClick={locateMe}
@@ -179,38 +190,10 @@ export const TripGuide: React.FC = () => {
       </div>
 
       {/* Bottom Sheet */}
-      <BottomSheet isOpen={true} snapPoints={[12, 65, 90]} initialSnap={1} onSnapChange={setSnapIndex}>
-        <div className="space-y-5 pt-2 pb-24 px-2">
+      <BottomSheet isOpen={true} snapPoints={[12, 60, 90]} initialSnap={1} onSnapChange={setSnapIndex}>
+        <div className="space-y-4 pt-2 pb-24 px-2">
 
-          {/* ── Vehicle Filter Bar ── */}
-          <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 border-b border-gray-100">
-            {ALL_VEHICLES.map(vid => {
-              const s      = VEHICLE_STYLES[vid];
-              const Icon   = s.icon;
-              const label  = vid === 'recommended' ? 'Recommended' : vid.charAt(0).toUpperCase() + vid.slice(1);
-              const isSelected = (selectedVehicle === null && vid === 'recommended') || selectedVehicle === vid;
-              const isBlocked  = !allowedVehicles.includes(vid) && vid !== 'recommended';
-              return (
-                <button
-                  key={vid}
-                  disabled={isBlocked}
-                  onClick={() => setSelectedVehicle(vid === 'recommended' ? null : vid as VehicleType)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full border transition-all shrink-0 ${
-                    isBlocked
-                      ? 'bg-gray-100 border-gray-200 text-gray-300 line-through cursor-not-allowed opacity-60'
-                      : isSelected
-                      ? `${s.color} text-white border-transparent`
-                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon size={16} />
-                  <span className="text-sm font-bold">{vid === 'train' ? 'LRT/MRT' : label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* ── Header Row ── */}
+          {/* ── Header ── */}
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3">
               {snapIndex === 0 && (
@@ -219,123 +202,74 @@ export const TripGuide: React.FC = () => {
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
                 </span>
               )}
-              <h2 className={`text-xl font-bold transition-colors duration-300 ${snapIndex === 0 ? 'text-green-600' : 'text-[#1a00b2]'}`}>
-                {snapIndex === 0 ? 'In Route' : 'Trip Overview'}
-              </h2>
+              <div>
+                <h2 className={`text-xl font-black transition-colors ${snapIndex === 0 ? 'text-green-600' : 'text-[#1a00b2]'}`}>
+                  {snapIndex === 0 ? 'In Route' : (selectedOption?.label ?? 'Trip Overview')}
+                </h2>
+                {selectedOption && <p className="text-xs text-gray-400">{selectedOption.tagline}</p>}
+              </div>
             </div>
 
-            <div className="flex flex-col items-end gap-2">
-              <span className="bg-[#f2ca4b] text-[#1a00b2] px-3 py-1 rounded-full text-sm font-bold shadow-sm">
-                {displayFare}
-              </span>
-              {/* Fare type toggle — hidden when fare is a forced special */}
-              {!isSubdivisionStart && (
-                <div className="flex bg-gray-100 p-0.5 rounded-lg shadow-inner border border-gray-200/50">
-                  {(['regular', 'discounted'] as FareType[]).map(ft => (
-                    <button
-                      key={ft}
-                      onClick={() => setFareType(ft)}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${fareType === ft ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
-                    >
-                      {ft.charAt(0).toUpperCase() + ft.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              )}
+            {/* Fare badge */}
+            <span className="bg-[#f2ca4b] text-[#1a00b2] px-3 py-1 rounded-full text-sm font-black shadow-sm shrink-0">
+              ₱{totalFareMin}–{totalFareMax}
+            </span>
+          </div>
+
+          {/* ── Subdivision alert ── */}
+          {inSubdivision && (
+            <div className="bg-amber-50 border border-amber-200 p-3 rounded-2xl flex items-start space-x-2">
+              <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={16} />
+              <p className="text-xs text-amber-700 font-medium leading-relaxed">
+                Village zone: Jeep/Bus restricted on interior roads. Follow legs in order.
+              </p>
+            </div>
+          )}
+
+          {/* ── Step picker ── (if multiple legs) */}
+          {enrichedLegs.length > 1 && (
+            <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
+              {enrichedLegs.map(leg => (
+                <button
+                  key={leg.step}
+                  onClick={() => setActiveStep(leg.step)}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-colors border ${
+                    activeStep === leg.step
+                      ? 'text-white border-transparent'
+                      : 'bg-white border-gray-200 text-gray-500'
+                  }`}
+                  style={activeStep === leg.step ? { backgroundColor: leg.color, borderColor: leg.color } : {}}
+                >
+                  <span>Leg {leg.step}</span>
+                  <span className="opacity-70">·</span>
+                  <span>{leg.vehicleLabel}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* ── Leg cards ── */}
+          <div className="space-y-0">
+            {enrichedLegs.map(leg => (
+              <LegCard key={leg.step} leg={leg} isActive={leg.step === activeStep} />
+            ))}
+          </div>
+
+          {/* ── Final walk step ── */}
+          <div className="flex space-x-4">
+            <div className="w-9 h-9 rounded-full bg-gray-800 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+              {enrichedLegs.length + 1}
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-gray-800">Walk to Destination</p>
+              <p className="text-gray-400 text-sm">Arrive at {destination.display_name.split(',')[0]}.</p>
             </div>
           </div>
 
-          {/* ── Subdivision Alert ── */}
-          {transitPlan?.advice && (
-            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3">
-              <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={18} />
-              <div>
-                <p className="text-[11px] font-black text-amber-800 uppercase tracking-widest mb-1">Transit Restriction</p>
-                <p className="text-sm text-amber-700 font-medium leading-relaxed">{transitPlan.advice}</p>
-              </div>
-            </div>
-          )}
-
-          {/* ── MULTI-LEG PLAN (subdivision routes) ── */}
-          {hasLegs ? (
-            <div className="space-y-1">
-              {/* Leg 0: current position marker */}
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-                  <MapPin size={18} className="text-gray-500" />
-                </div>
-                <p className="text-sm font-bold text-gray-500">Your Location (Inside Village)</p>
-              </div>
-
-              {transitPlan!.legs.map(leg => <LegCard key={leg.step} leg={leg} />)}
-
-              {/* Final walk step */}
-              <div className="flex space-x-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-9 h-9 rounded-full bg-gray-800 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                    {transitPlan!.legs.length + 1}
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-base text-gray-800">Walk to Destination</p>
-                  <p className="text-gray-500 text-sm">Arrive at {destName}.</p>
-                </div>
-              </div>
-            </div>
-
-          ) : (
-            /* ── SINGLE-LEG PLAN (standard routes) ── */
-            <div className="flex space-x-4">
-              <div className="flex flex-col items-center">
-                <div className={`w-9 h-9 rounded-full ${activeStyle.color} text-white flex items-center justify-center font-bold text-sm shadow-sm`}>
-                  <ActiveIcon size={16} />
-                </div>
-                <div className="w-0.5 flex-1 bg-gray-200 my-2" />
-              </div>
-              <div className="flex-1 pb-6">
-                <p className="font-bold text-lg text-gray-800">
-                  {activeVehicleLabel} to {destName}
-                </p>
-                <p className="text-gray-500 text-sm mb-3">
-                  {transitPlan?.suggestedFirstLeg ?? `Wait along the main road.`}
-                </p>
-
-                <div className={`${activeStyle.bg} border ${activeStyle.border}/30 p-4 rounded-2xl relative overflow-hidden shadow-sm`}>
-                  <div className={`absolute top-0 left-0 w-1.5 h-full ${activeStyle.color}`} />
-                  <div className="flex items-start space-x-3 pl-1">
-                    <MessageSquare size={18} className={`${activeStyle.text} shrink-0 mt-0.5`} />
-                    <div>
-                      <p className={`text-[10px] font-bold ${activeStyle.text} uppercase tracking-wider mb-1 opacity-80`}>What to say</p>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${activeStyle.pill}`}>
-                          {activeVehicleLabel}
-                        </span>
-                        <p className={`font-bold ${activeStyle.text} text-sm`}>"{simpleWhatToSay}"</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Walk to Destination (single-leg only) ── */}
-          {!hasLegs && (
-            <div className="flex space-x-4">
-              <div className="flex flex-col items-center">
-                <div className="w-9 h-9 rounded-full bg-gray-800 text-white flex items-center justify-center font-bold text-sm shadow-sm">2</div>
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-base text-gray-800">Walk to Destination</p>
-                <p className="text-gray-500 text-sm">Arrive at {destName}.</p>
-              </div>
-            </div>
-          )}
-
-          {/* ── Finish Button ── */}
+          {/* ── Finish ── */}
           <button
             onClick={() => navigate('/home')}
-            className="w-full mt-4 bg-gray-900 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform shadow-md"
+            className="w-full mt-2 bg-gray-900 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform shadow-md"
           >
             {t.trip.finish}
           </button>

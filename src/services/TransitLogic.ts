@@ -1,70 +1,47 @@
 import type { Coordinates } from '../contexts/LocationContext';
 
 // ─────────────────────────────────────────────────────────────────
+//  CONSTANTS
+// ─────────────────────────────────────────────────────────────────
+
+export const VEHICLE_COLORS_HEX: Record<string, string> = {
+  jeepney:     '#16a34a',   // Green
+  bus:         '#dc2626',   // Red
+  tricycle:    '#2563eb',   // Blue
+  train:       '#eab308',   // Yellow
+  walking:     '#6b7280',   // Gray
+  recommended: '#1a00b2',   // Brand blue
+};
+
+// Speed heuristics (minutes per km)
+const SPEED: Record<string, number> = {
+  tricycle: 4,    // ~15 km/h
+  jeepney:  2.5,  // ~24 km/h
+  bus:      2,    // ~30 km/h
+  train:    1.5,  // ~40 km/h
+};
+
+// ─────────────────────────────────────────────────────────────────
 //  ZONE DATABASE
 // ─────────────────────────────────────────────────────────────────
 
 export type ZoneType = 'subdivision' | 'barangay' | 'main_road';
-export type RoadClass = 'residential' | 'barangay' | 'primary' | 'highway' | 'unknown';
 
 export interface SubdivisionZone {
   name: string;
-  gateName: string;          // Name used in the "Pahatid po sa..." prompt
-  fareMin: number;           // Minimum special trip fare (₱)
+  gateName: string;
+  fareMin: number;
   fareMax: number;
-  bounds: {
-    lat: [number, number];
-    lng: [number, number];
-  };
+  bounds: { lat: [number, number]; lng: [number, number] };
 }
 
-/** 
- * CONSTRAINED_ZONES — hard-coded geofence database for gated communities.
- * Add new subdivisions here as needed. 
- */
 export const CONSTRAINED_ZONES: SubdivisionZone[] = [
-  {
-    name: 'BF Homes',
-    gateName: 'BF Homes Main Gate (Aguirre Ave.)',
-    fareMin: 40,
-    fareMax: 60,
-    bounds: { lat: [14.42, 14.46], lng: [121.0, 121.05] }
-  },
-  {
-    name: 'Moonwalk Village',
-    gateName: 'Moonwalk Village Gate (Las Piñas Rd.)',
-    fareMin: 35,
-    fareMax: 50,
-    bounds: { lat: [14.48, 14.5], lng: [121.0, 121.02] }
-  },
-  {
-    name: 'Pilar Village',
-    gateName: 'Pilar Village Gate (Alabang-Zapote Rd.)',
-    fareMin: 35,
-    fareMax: 50,
-    bounds: { lat: [14.43, 14.45], lng: [120.98, 121.0] }
-  },
-  {
-    name: 'Sun Valley',
-    gateName: 'Sun Valley Gate (Quirino Ave.)',
-    fareMin: 40,
-    fareMax: 60,
-    bounds: { lat: [14.38, 14.42], lng: [121.01, 121.05] }
-  },
-  {
-    name: 'Philips Park Village',
-    gateName: 'Philips Park Gate (Molino Rd.)',
-    fareMin: 30,
-    fareMax: 50,
-    bounds: { lat: [14.44, 14.47], lng: [120.97, 121.0] }
-  },
-  {
-    name: 'Tuazon Subdivision',
-    gateName: 'Tuazon Subdivision Gate',
-    fareMin: 30,
-    fareMax: 45,
-    bounds: { lat: [14.51, 14.55], lng: [121.0, 121.04] }
-  },
+  { name: 'BF Homes',          gateName: 'BF Homes Main Gate (Aguirre Ave.)',         fareMin: 40, fareMax: 60, bounds: { lat: [14.42, 14.46], lng: [121.0,  121.05] } },
+  { name: 'Moonwalk Village',  gateName: 'Moonwalk Village Gate (Las Piñas Rd.)',      fareMin: 35, fareMax: 50, bounds: { lat: [14.48, 14.5],  lng: [121.0,  121.02] } },
+  { name: 'Pilar Village',     gateName: 'Pilar Village Gate (Alabang-Zapote Rd.)',    fareMin: 35, fareMax: 50, bounds: { lat: [14.43, 14.45], lng: [120.98, 121.0]  } },
+  { name: 'Sun Valley',        gateName: 'Sun Valley Gate (Quirino Ave.)',             fareMin: 40, fareMax: 60, bounds: { lat: [14.38, 14.42], lng: [121.01, 121.05] } },
+  { name: 'Philips Park',      gateName: 'Philips Park Gate (Molino Rd.)',             fareMin: 30, fareMax: 50, bounds: { lat: [14.44, 14.47], lng: [120.97, 121.0]  } },
+  { name: 'Tuazon Subdivision',gateName: 'Tuazon Subdivision Gate',                    fareMin: 30, fareMax: 45, bounds: { lat: [14.51, 14.55], lng: [121.0,  121.04] } },
 ];
 
 // ─────────────────────────────────────────────────────────────────
@@ -76,233 +53,325 @@ export interface ZoneResult {
   zone?: SubdivisionZone;
 }
 
-/** Find which constrained zone a coordinate falls in (if any). */
-export const getZoneResult = (coords: Coordinates, displayName: string = ''): ZoneResult => {
+export const getZoneResult = (coords: Coordinates, displayName = ''): ZoneResult => {
   const [lat, lng] = coords;
-
-  // 1. Hard-coded geofence lookup (most accurate)
   for (const zone of CONSTRAINED_ZONES) {
-    if (
-      lat >= zone.bounds.lat[0] && lat <= zone.bounds.lat[1] &&
-      lng >= zone.bounds.lng[0] && lng <= zone.bounds.lng[1]
-    ) {
+    if (lat >= zone.bounds.lat[0] && lat <= zone.bounds.lat[1] &&
+        lng >= zone.bounds.lng[0] && lng <= zone.bounds.lng[1]) {
       return { type: 'subdivision', zone };
     }
   }
-
-  // 2. OSM display-name string matching (fallback for uncatalogued areas)
   const lower = displayName.toLowerCase();
-  const subdivisionKeywords = [
-    'subdivision', 'village', 'subd.', 'subd', 'executive',
-    'homes', 'estate', 'residences', 'gated', 'compound'
-  ];
-  if (subdivisionKeywords.some(k => lower.includes(k))) {
-    // Build a synthetic zone for string-matched subdivisions
-    const syntheticZone: SubdivisionZone = {
+  const subdivKw = ['subdivision','village','subd.','subd','homes','estate','residences','gated','compound'];
+  if (subdivKw.some(k => lower.includes(k))) {
+    return { type: 'subdivision', zone: {
       name: displayName.split(',')[0],
       gateName: `${displayName.split(',')[0]} Gate`,
-      fareMin: 40,
-      fareMax: 60,
-      bounds: { lat: [0, 0], lng: [0, 0] } // not used for string-matched
-    };
-    return { type: 'subdivision', zone: syntheticZone };
+      fareMin: 40, fareMax: 60,
+      bounds: { lat: [0,0], lng: [0,0] },
+    }};
   }
-
-  if (lower.includes('barangay') || lower.includes('brgy')) {
-    return { type: 'barangay' };
-  }
-
+  if (lower.includes('barangay') || lower.includes('brgy')) return { type: 'barangay' };
   return { type: 'main_road' };
 };
 
 // ─────────────────────────────────────────────────────────────────
-//  ROAD CLASS INFERENCE
+//  ROAD CLASS
 // ─────────────────────────────────────────────────────────────────
 
-export const inferRoadClass = (displayName: string): RoadClass => {
-  const lower = displayName.toLowerCase();
-  if (lower.includes('highway') || lower.includes('expressway') || lower.includes('national rd')) return 'highway';
-  if (lower.includes('avenue') || lower.includes('blvd') || lower.includes('boulevard')) return 'primary';
-  if (lower.includes('st.') || lower.includes('street') || lower.includes('barangay road')) return 'barangay';
-  if (lower.includes('interior') || lower.includes('phase') || lower.includes('block')) return 'residential';
+export type RoadClass = 'residential' | 'barangay' | 'primary' | 'highway' | 'unknown';
+
+export const inferRoadClass = (name: string): RoadClass => {
+  const l = name.toLowerCase();
+  if (l.includes('highway') || l.includes('expressway')) return 'highway';
+  if (l.includes('avenue') || l.includes('blvd'))        return 'primary';
+  if (l.includes('barangay road') || l.includes('st.'))  return 'barangay';
+  if (l.includes('interior') || l.includes('phase'))     return 'residential';
   return 'unknown';
 };
 
-/** Returns which vehicles are BANNED on a given road class. */
-export const getBannedVehiclesForRoad = (roadClass: RoadClass): string[] => {
-  switch (roadClass) {
-    case 'residential':
-    case 'barangay':
-      return ['bus', 'train']; // Hard-disable large vehicles
-    case 'highway':
-    case 'primary':
-      return []; // All allowed
-    default:
-      return [];
-  }
+export const getBannedVehiclesForRoad = (rc: RoadClass): string[] => {
+  if (rc === 'residential' || rc === 'barangay') return ['bus', 'train'];
+  return [];
 };
 
 // ─────────────────────────────────────────────────────────────────
-//  ROUTE LEG MODEL
+//  LEG & ROUTE OPTION MODELS
 // ─────────────────────────────────────────────────────────────────
 
 export interface RouteLeg {
-  step: number;
-  vehicle: string;           // e.g. 'tricycle', 'jeepney', 'bus'
-  vehicleLabel: string;
-  from: string;
-  to: string;
-  fareMin: number;
-  fareMax: number;
-  fareLabel: string;
-  fareType: 'special' | 'standard' | 'negotiable';
-  whatToSay: string;
-  isRestricted: boolean;     // True if vehicle is geo-blocked on first/last mile
+  step:          number;
+  vehicle:       string;
+  vehicleLabel:  string;
+  from:          string;
+  to:            string;
+  path:          Coordinates[];    // filled after OSRM fetch in TripGuide
+  color:         string;
+  fareMin:       number;
+  fareMax:       number;
+  fareLabel:     string;
+  fareType:      'special' | 'standard' | 'negotiable';
+  whatToSay:     string;
+  isTransferNode: boolean;
+  transferLabel?: string;
+  legRatio:      number;           // proportion of total route geometry for this leg (0–1)
 }
 
+export interface RouteOption {
+  id:               'commuter' | 'express' | 'solo';
+  label:            string;
+  tagline:          string;
+  priority:         'fare' | 'time' | 'convenience';
+  legs:             RouteLeg[];
+  totalFareMin:     number;
+  totalFareMax:     number;
+  estimatedMinutes: number;
+  badge:            string;
+  badgeColor:       string;
+}
+
+/** Legacy shape — kept for backwards compat with Results/TripGuide geofence alert */
 export interface TransitPlan {
-  legs: RouteLeg[];
-  allowedVehicles: string[];
-  startZone: ZoneResult;
-  endZone: ZoneResult;
-  // Legacy fields for backwards-compat with Results.tsx
+  legs:             RouteLeg[];
+  allowedVehicles:  string[];
+  startZone:        ZoneResult;
+  endZone:          ZoneResult;
   suggestedFirstLeg?: string;
-  fareOverride?: string;
-  advice?: string;
+  fareOverride?:    string;
+  advice?:          string;
 }
 
 // ─────────────────────────────────────────────────────────────────
-//  CORE ALGORITHM
+//  HELPERS
+// ─────────────────────────────────────────────────────────────────
+
+/** Haversine distance in km between two lat/lng points */
+export const haversineKm = (a: Coordinates, b: Coordinates): number => {
+  const R = 6371;
+  const dLat = (b[0] - a[0]) * Math.PI / 180;
+  const dLng = (b[1] - a[1]) * Math.PI / 180;
+  const aa = Math.sin(dLat/2)**2 +
+             Math.cos(a[0]*Math.PI/180) * Math.cos(b[0]*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1-aa));
+};
+
+/** Split a flat coordinate array into N slices by ratio array (must sum ≈ 1) */
+export const splitGeometry = (coords: Coordinates[], ratios: number[]): Coordinates[][] => {
+  const total = coords.length;
+  const result: Coordinates[][] = [];
+  let pos = 0;
+  for (let i = 0; i < ratios.length; i++) {
+    const count = i === ratios.length - 1
+      ? total - pos
+      : Math.max(2, Math.round(ratios[i] * total));
+    result.push(coords.slice(pos, pos + count));
+    pos = Math.min(pos + count, total);
+  }
+  return result;
+};
+
+// ─────────────────────────────────────────────────────────────────
+//  LEG BUILDER HELPERS
+// ─────────────────────────────────────────────────────────────────
+
+const makeLeg = (
+  step: number,
+  vehicle: string,
+  from: string,
+  to: string,
+  fareMin: number,
+  fareMax: number,
+  fareType: RouteLeg['fareType'],
+  whatToSay: string,
+  isTransferNode: boolean,
+  legRatio: number,
+  transferLabel?: string,
+): RouteLeg => ({
+  step,
+  vehicle,
+  vehicleLabel: vehicle === 'train' ? 'LRT/MRT' : vehicle.charAt(0).toUpperCase() + vehicle.slice(1),
+  from, to,
+  path: [],
+  color: VEHICLE_COLORS_HEX[vehicle] ?? '#1a00b2',
+  fareMin, fareMax,
+  fareLabel: fareType === 'special' ? `₱${fareMin}–${fareMax} (Special)` : `₱${fareMin}`,
+  fareType,
+  whatToSay,
+  isTransferNode,
+  transferLabel,
+  legRatio,
+});
+
+// ─────────────────────────────────────────────────────────────────
+//  3-OPTION COMPARISON ENGINE
+// ─────────────────────────────────────────────────────────────────
+
+export const generateRouteOptions = (
+  startCoords: Coordinates,
+  endCoords:   Coordinates,
+  startName:   string,
+  endName:     string,
+): RouteOption[] => {
+  const startZone  = getZoneResult(startCoords, startName);
+  const endZone    = getZoneResult(endCoords,   endName);
+  const distKm     = haversineKm(startCoords, endCoords);
+  const destName   = endName.split(',')[0];
+  const startLabel = startName.split(',')[0];
+
+  const startSubdiv = startZone.type === 'subdivision' ? startZone.zone! : null;
+  const endSubdiv   = endZone.type   === 'subdivision' ? endZone.zone!   : null;
+
+  // Interior tricycle legs take ~15% of route each
+  const INTERIOR_RATIO = 0.15;
+  const mainRatio = 1 - (startSubdiv ? INTERIOR_RATIO : 0) - (endSubdiv ? INTERIOR_RATIO : 0);
+
+  // ── OPTION 1: Commuter Special (Tricycle + Jeepney) ──
+  const commuterLegs: RouteLeg[] = [];
+  if (startSubdiv) commuterLegs.push(makeLeg(
+    1, 'tricycle', startLabel, startSubdiv.gateName,
+    startSubdiv.fareMin, startSubdiv.fareMax, 'special',
+    `Pahatid po sa ${startSubdiv.gateName}.`,
+    true, INTERIOR_RATIO, `Board Jeepney at ${startSubdiv.gateName}`
+  ));
+  commuterLegs.push(makeLeg(
+    commuterLegs.length + 1, 'jeepney',
+    startSubdiv ? startSubdiv.gateName : startLabel,
+    endSubdiv   ? endSubdiv.gateName   : destName,
+    13, 15, 'standard',
+    `Bayad po, isa hanggang ${endSubdiv ? endSubdiv.gateName : destName}.`,
+    !!endSubdiv, mainRatio,
+    endSubdiv ? `Switch to Tricycle at ${endSubdiv.gateName}` : undefined
+  ));
+  if (endSubdiv) commuterLegs.push(makeLeg(
+    commuterLegs.length + 1, 'tricycle', endSubdiv.gateName, destName,
+    endSubdiv.fareMin, endSubdiv.fareMax, 'special',
+    `Pahatid po sa loob ng ${endSubdiv.name}, sa ${destName}.`,
+    false, INTERIOR_RATIO
+  ));
+
+  const commuterFareMin = commuterLegs.reduce((s, l) => s + l.fareMin, 0);
+  const commuterFareMax = commuterLegs.reduce((s, l) => s + l.fareMax, 0);
+  const commuterTime    = Math.round(
+    (startSubdiv ? 5 : 0) + distKm * SPEED.jeepney + (endSubdiv ? 5 : 0)
+  );
+
+  // ── OPTION 2: Express (Bus / LRT) ──
+  const mainExpressVehicle = distKm > 5 ? 'train' : 'bus';
+  const expressLegs: RouteLeg[] = [];
+  if (startSubdiv) expressLegs.push(makeLeg(
+    1, 'tricycle', startLabel, startSubdiv.gateName,
+    startSubdiv.fareMin, startSubdiv.fareMax, 'special',
+    `Pahatid po sa ${startSubdiv.gateName}.`,
+    true, INTERIOR_RATIO, `Board ${mainExpressVehicle === 'train' ? 'LRT/MRT' : 'Bus'} at ${startSubdiv.gateName}`
+  ));
+  const expressFareMainMin = mainExpressVehicle === 'train' ? 15 : 15;
+  const expressFareMainMax = mainExpressVehicle === 'train' ? 30 : 25;
+  expressLegs.push(makeLeg(
+    expressLegs.length + 1, mainExpressVehicle,
+    startSubdiv ? startSubdiv.gateName : startLabel,
+    endSubdiv   ? endSubdiv.gateName   : destName,
+    expressFareMainMin, expressFareMainMax, 'standard',
+    `Bayad po, isa hanggang ${endSubdiv ? endSubdiv.gateName : destName}.`,
+    !!endSubdiv, mainRatio,
+    endSubdiv ? `Switch to Tricycle at ${endSubdiv.gateName}` : undefined
+  ));
+  if (endSubdiv) expressLegs.push(makeLeg(
+    expressLegs.length + 1, 'tricycle', endSubdiv.gateName, destName,
+    endSubdiv.fareMin, endSubdiv.fareMax, 'special',
+    `Pahatid po sa loob ng ${endSubdiv.name}, sa ${destName}.`,
+    false, INTERIOR_RATIO
+  ));
+
+  const expressFareMin = expressLegs.reduce((s, l) => s + l.fareMin, 0);
+  const expressFareMax = expressLegs.reduce((s, l) => s + l.fareMax, 0);
+  const expressTime    = Math.round(
+    (startSubdiv ? 4 : 0) + distKm * SPEED[mainExpressVehicle] + (endSubdiv ? 5 : 0)
+  );
+
+  // ── OPTION 3: Solo/Special (All-Tricycle) ──
+  const soloBaseMin = Math.round(distKm * 12) + (startSubdiv?.fareMin ?? 0) + (endSubdiv?.fareMin ?? 0);
+  const soloBaseMax = soloBaseMin + 40;
+  const soloLegs: RouteLeg[] = [makeLeg(
+    1, 'tricycle', startLabel, destName,
+    Math.max(soloBaseMin, 50), soloBaseMax + 10, 'special',
+    `Pahatid po sa ${destName}. Special trip.`,
+    false, 1.0
+  )];
+  const soloFareMin = soloLegs[0].fareMin;
+  const soloFareMax = soloLegs[0].fareMax;
+  const soloTime    = Math.round(distKm * SPEED.tricycle + (startSubdiv ? 5 : 0));
+
+  return [
+    {
+      id:               'commuter',
+      label:            'The Commuter Special',
+      tagline:          commuterLegs.map(l => l.vehicleLabel).join(' + '),
+      priority:         'fare',
+      legs:             commuterLegs,
+      totalFareMin:     commuterFareMin,
+      totalFareMax:     commuterFareMax,
+      estimatedMinutes: commuterTime,
+      badge:            'CHEAPEST',
+      badgeColor:       'bg-green-100 text-green-700 border-green-300',
+    },
+    {
+      id:               'express',
+      label:            'The Express',
+      tagline:          expressLegs.map(l => l.vehicleLabel).join(' + '),
+      priority:         'time',
+      legs:             expressLegs,
+      totalFareMin:     expressFareMin,
+      totalFareMax:     expressFareMax,
+      estimatedMinutes: expressTime,
+      badge:            'FASTEST',
+      badgeColor:       'bg-blue-100 text-blue-700 border-blue-300',
+    },
+    {
+      id:               'solo',
+      label:            'The Solo/Special',
+      tagline:          'All-Tricycle • Door to Door',
+      priority:         'convenience',
+      legs:             soloLegs,
+      totalFareMin:     soloFareMin,
+      totalFareMax:     soloFareMax,
+      estimatedMinutes: soloTime,
+      badge:            'CONVENIENT',
+      badgeColor:       'bg-purple-100 text-purple-700 border-purple-300',
+    },
+  ];
+};
+
+// ─────────────────────────────────────────────────────────────────
+//  LEGACY getTransitPlan — kept so Results.tsx still compiles
 // ─────────────────────────────────────────────────────────────────
 
 export const getTransitPlan = (
-  start: Coordinates,
-  _end: Coordinates,
+  start:     Coordinates,
+  end:       Coordinates,
   startName: string,
-  endName: string
+  endName:   string,
 ): TransitPlan => {
-  const startZone = getZoneResult(start, startName);
-  const endZone   = getZoneResult(_end, endName);
-
-  const startRoadClass = inferRoadClass(startName);
-  const bannedOnStart  = getBannedVehiclesForRoad(startRoadClass);
-
-  // ── CASE 1: Starting INSIDE a subdivision ──────────────────────
-  if (startZone.type === 'subdivision' && startZone.zone) {
-    const { zone } = startZone;
-    const fareLabel = `₱${zone.fareMin}–${zone.fareMax} (Special)`;
-
-    const leg1: RouteLeg = {
-      step: 1,
-      vehicle: 'tricycle',
-      vehicleLabel: 'Tricycle',
-      from: startName.split(',')[0],
-      to: zone.gateName,
-      fareMin: zone.fareMin,
-      fareMax: zone.fareMax,
-      fareLabel,
-      fareType: 'special',
-      whatToSay: `Pahatid po sa ${zone.gateName}.`,
-      isRestricted: false,
-    };
-
-    // Leg 2 depends on end zone
-    const leg2Vehicle = endZone.type === 'subdivision' ? 'tricycle' : 'jeepney';
-    const leg2FareMin = leg2Vehicle === 'jeepney' ? 13 : 30;
-    const leg2FareMax = leg2Vehicle === 'jeepney' ? 15 : 50;
-    const finalDest = endName.split(',')[0];
-    const leg2: RouteLeg = {
-      step: 2,
-      vehicle: leg2Vehicle,
-      vehicleLabel: leg2Vehicle === 'jeepney' ? 'Jeepney' : 'Tricycle',
-      from: zone.gateName,
-      to: finalDest,
-      fareMin: leg2FareMin,
-      fareMax: leg2FareMax,
-      fareLabel: `₱${leg2FareMin}`,
-      fareType: 'standard',
-      whatToSay: `Bayad po, isa hanggang ${finalDest}.`,
-      isRestricted: false,
-    };
-
-    return {
-      legs: [leg1, leg2],
-      allowedVehicles: ['tricycle'],  // Only tricycle for first leg
-      startZone,
-      endZone,
-      // Legacy compat
-      suggestedFirstLeg: `Mag-tricycle hanggang ${zone.gateName}`,
-      fareOverride: fareLabel,
-      advice: `Private Village: Jeep/Bus restricted inside ${zone.name}. Take Tricycle to the gate first.`,
-    };
-  }
-
-  // ── CASE 2: Ending INSIDE a subdivision ───────────────────────
-  if (endZone.type === 'subdivision' && endZone.zone) {
-    const { zone } = endZone;
-    const finalDest = endName.split(',')[0];
-
-    const leg1: RouteLeg = {
-      step: 1,
-      vehicle: 'jeepney',
-      vehicleLabel: 'Jeepney',
-      from: startName.split(',')[0],
-      to: zone.gateName,
-      fareMin: 13,
-      fareMax: 15,
-      fareLabel: '₱13',
-      fareType: 'standard',
-      whatToSay: `Bayad po, isa hanggang ${zone.gateName}.`,
-      isRestricted: false,
-    };
-
-    const leg2: RouteLeg = {
-      step: 2,
-      vehicle: 'tricycle',
-      vehicleLabel: 'Tricycle',
-      from: zone.gateName,
-      to: finalDest,
-      fareMin: zone.fareMin,
-      fareMax: zone.fareMax,
-      fareLabel: `₱${zone.fareMin}–${zone.fareMax} (Special)`,
-      fareType: 'special',
-      whatToSay: `Pahatid po sa loob ng ${zone.name}, sa ${finalDest}.`,
-      isRestricted: false,
-    };
-
-    return {
-      legs: [leg1, leg2],
-      allowedVehicles: ['jeepney', 'bus', 'train', 'tricycle'],
-      startZone,
-      endZone,
-      advice: `Destination is inside ${zone.name}. Jeep/Bus drops off at gate — tricycle enters the village.`,
-    };
-  }
-
-  // ── CASE 3: Barangay roads ─────────────────────────────────────
-  if (startZone.type === 'barangay') {
-    const allowed = ['tricycle', 'jeepney', 'walking']
-      .filter(v => !bannedOnStart.includes(v));
-    return {
-      legs: [],
-      allowedVehicles: allowed,
-      startZone,
-      endZone,
-      advice: 'Narrow roads: Tricycle or Jeepney recommended.',
-    };
-  }
-
-  // ── CASE 4: Main Road / Highway (default) ─────────────────────
-  const allVehicles = ['jeepney', 'bus', 'train', 'tricycle']
-    .filter(v => !bannedOnStart.includes(v));
+  const options    = generateRouteOptions(start, end, startName, endName);
+  const commuter   = options[0]; // Use commuter option for legacy plan
+  const startZone  = getZoneResult(start, startName);
+  const endZone    = getZoneResult(end,   endName);
+  const startSubdiv = startZone.zone;
 
   return {
-    legs: [],
-    allowedVehicles: allVehicles,
+    legs:            commuter.legs,
+    allowedVehicles: startZone.type === 'subdivision'
+      ? ['tricycle']
+      : ['jeepney','bus','train','tricycle'],
     startZone,
     endZone,
-    advice: allVehicles.length < 4
-      ? `Road restriction: ${bannedOnStart.join(', ')} not suitable here.`
+    suggestedFirstLeg: startSubdiv
+      ? `Mag-tricycle hanggang ${startSubdiv.gateName}`
+      : undefined,
+    fareOverride: startSubdiv
+      ? `₱${startSubdiv.fareMin}–${startSubdiv.fareMax} (Special)`
+      : undefined,
+    advice: startZone.type === 'subdivision'
+      ? `Private Village: Jeep/Bus restricted inside ${startSubdiv?.name}. Take Tricycle to the gate first.`
       : 'High accessibility: All transport modes available.',
   };
 };
