@@ -1,15 +1,28 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useLocation as useRouteLocation } from 'react-router-dom';
-import { ArrowLeft, MapPin, Navigation, Clock, CreditCard } from 'lucide-react';
+import { ArrowLeft, MapPin, Navigation, Clock, CreditCard, AlertCircle } from 'lucide-react';
 import { useTranslation } from '../contexts/TranslationContext';
+import { useLocation } from '../contexts/LocationContext';
 import { Button } from '../components/ui/Button';
+import { getTransitPlan } from '../services/TransitLogic';
 import type { NominatimResult } from '../services/api';
 
 export const Results: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const routeLocation = useRouteLocation();
+  const { location: userCoords } = useLocation();
   const destination = routeLocation.state?.destination as NominatimResult;
+
+  const transitPlan = useMemo(() => {
+    if (!userCoords || !destination) return null;
+    return getTransitPlan(
+      userCoords,
+      [parseFloat(destination.lat), parseFloat(destination.lon)],
+      'Your Location',
+      destination.display_name
+    );
+  }, [userCoords, destination]);
 
   if (!destination) {
     return (
@@ -21,7 +34,7 @@ export const Results: React.FC = () => {
   }
 
   const handleStartTrip = () => {
-    navigate('/trip', { state: { destination } });
+    navigate('/trip', { state: { destination, transitPlan } });
   };
 
   return (
@@ -43,123 +56,147 @@ export const Results: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 p-4 -mt-4">
+      <div className="flex-1 p-4 -mt-4 overflow-y-auto no-scrollbar">
+        {/* Transit Advice / Geofencing Alert */}
+        {transitPlan?.advice && (
+          <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3 mb-6">
+            <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={20} />
+            <div>
+              <p className="text-xs font-black text-amber-800 uppercase tracking-widest mb-1">Transit Restriction</p>
+              <p className="text-sm text-amber-700 font-medium leading-relaxed">{transitPlan.advice}</p>
+              {transitPlan.suggestedFirstLeg && (
+                <p className="text-sm text-amber-900 font-bold mt-1">💡 {transitPlan.suggestedFirstLeg}</p>
+              )}
+            </div>
+          </div>
+        )}
+
         <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3 px-1">
           {t.results.recommended}
         </h2>
         
-        <div className="space-y-4 pb-20">
-          {/* Option 1: Recommended */}
-          <div className="bg-white p-5 rounded-3xl shadow-md border-2 border-[#1a00b2]/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-[#f2ca4b] text-[#1a00b2] text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10">BEST MATCH</div>
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-[#1a00b2] rounded-xl flex items-center justify-center text-white shadow-sm">
-                  <Navigation size={20} />
+        <div className="space-y-4 pb-24">
+          {/* Option 1: Recommended - Only if allowed */}
+          {(transitPlan?.allowedVehicles.includes('jeepney') || transitPlan?.allowedVehicles.includes('bus')) && (
+            <div className="bg-white p-5 rounded-3xl shadow-md border-2 border-[#1a00b2]/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-[#f2ca4b] text-[#1a00b2] text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10">BEST MATCH</div>
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-[#1a00b2] rounded-xl flex items-center justify-center text-white shadow-sm">
+                    <Navigation size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg text-gray-900">Jeepney + Bus</p>
+                    <p className="text-xs font-medium text-gray-500">2 transfers • Fastest</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-lg text-gray-900">Jeepney + Bus</p>
-                  <p className="text-xs font-medium text-gray-500">2 transfers • Fastest</p>
+                <div className="text-right">
+                  <p className="font-black text-xl text-[#1a00b2]">35 {t.results.mins}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-black text-xl text-[#1a00b2]">35 {t.results.mins}</p>
+              
+              <div className="flex items-center space-x-4 mb-5">
+                <div className="flex items-center space-x-1.5 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
+                  <Clock size={14} />
+                  <span>Departs in 5m</span>
+                </div>
+                <div className="flex items-center space-x-1.5 text-xs font-bold text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
+                  <CreditCard size={14} />
+                  <span>₱25-35</span>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-center space-x-4 mb-5">
-              <div className="flex items-center space-x-1.5 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
-                <Clock size={14} />
-                <span>Departs in 5m</span>
-              </div>
-              <div className="flex items-center space-x-1.5 text-xs font-bold text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
-                <CreditCard size={14} />
-                <span>₱25-35</span>
-              </div>
-            </div>
 
-            <Button fullWidth size="lg" onClick={handleStartTrip} className="shadow-lg active:scale-95 transition-transform">
-              {t.results.startTrip}
-            </Button>
-          </div>
+              <Button fullWidth size="lg" onClick={handleStartTrip} className="shadow-lg active:scale-95 transition-transform">
+                {t.results.startTrip}
+              </Button>
+            </div>
+          )}
 
           <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3 px-1 mt-6">
-            Other Options
+            {transitPlan?.allowedVehicles.length === 2 ? 'Available Options' : 'Other Options'}
           </h2>
 
           {/* Option 2: Bus Only */}
-          <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 hover:border-red-200 transition-colors">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-600">
-                  <Navigation size={20} />
+          {transitPlan?.allowedVehicles.includes('bus') && (
+            <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 hover:border-red-200 transition-colors">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-600">
+                    <Navigation size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">Bus Only</p>
+                    <p className="text-xs font-medium text-gray-500">Direct route • Air-conditioned</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-gray-900">Bus Only</p>
-                  <p className="text-xs font-medium text-gray-500">Direct route • Air-conditioned</p>
+                <div className="text-right">
+                  <p className="font-bold text-lg text-gray-900">45 {t.results.mins}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-lg text-gray-900">45 {t.results.mins}</p>
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center space-x-3">
+                  <span className="text-xs font-bold text-gray-500">₱40</span>
+                  <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">Expect Traffic</span>
+                </div>
+                <button onClick={handleStartTrip} className="text-xs font-bold text-[#1a00b2] hover:underline px-2 py-1">View Route</button>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-bold text-gray-500">₱40</span>
-                <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">Expect Traffic</span>
-              </div>
-              <button onClick={handleStartTrip} className="text-xs font-bold text-[#1a00b2] hover:underline px-2 py-1">View Route</button>
-            </div>
-          </div>
+          )}
 
           {/* Option 3: Jeepney Only */}
-          <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 hover:border-green-200 transition-colors">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
-                  <Navigation size={20} />
+          {transitPlan?.allowedVehicles.includes('jeepney') && (
+            <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 hover:border-green-200 transition-colors">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                    <Navigation size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">Jeepney Only</p>
+                    <p className="text-xs font-medium text-gray-500">1 transfer • Most affordable</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-gray-900">Jeepney Only</p>
-                  <p className="text-xs font-medium text-gray-500">1 transfer • Most affordable</p>
+                <div className="text-right">
+                  <p className="font-bold text-lg text-gray-900">55 {t.results.mins}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-lg text-gray-900">55 {t.results.mins}</p>
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center space-x-3">
+                  <span className="text-xs font-bold text-gray-500">₱13</span>
+                </div>
+                <button onClick={handleStartTrip} className="text-xs font-bold text-[#1a00b2] hover:underline px-2 py-1">View Route</button>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-bold text-gray-500">₱13</span>
-              </div>
-              <button onClick={handleStartTrip} className="text-xs font-bold text-[#1a00b2] hover:underline px-2 py-1">View Route</button>
-            </div>
-          </div>
+          )}
 
           {/* Option 4: Tricycle */}
-          <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                  <Navigation size={20} />
+          {transitPlan?.allowedVehicles.includes('tricycle') && (
+            <div className={`bg-white p-4 rounded-3xl shadow-sm border transition-colors ${transitPlan.fareOverride ? 'border-blue-200 bg-blue-50/30' : 'border-gray-100 hover:border-blue-200'}`}>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                    <Navigation size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">Tricycle {transitPlan.fareOverride ? '(Village Service)' : 'Special'}</p>
+                    <p className="text-xs font-medium text-gray-500">{transitPlan.suggestedFirstLeg || 'Direct drop-off • Inner streets'}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-gray-900">Tricycle Special</p>
-                  <p className="text-xs font-medium text-gray-500">Direct drop-off • Inner streets</p>
+                <div className="text-right">
+                  <p className="font-bold text-lg text-gray-900">30 {t.results.mins}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-lg text-gray-900">30 {t.results.mins}</p>
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center space-x-3">
+                  <span className="text-xs font-bold text-blue-700">{transitPlan.fareOverride || '₱60+'}</span>
+                  <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                    {transitPlan.fareOverride ? 'Fixed Rate' : 'Negotiable'}
+                  </span>
+                </div>
+                <button onClick={handleStartTrip} className="text-xs font-bold text-[#1a00b2] hover:underline px-2 py-1">View Route</button>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-bold text-gray-500">₱60+</span>
-                <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold">Negotiable</span>
-              </div>
-              <button onClick={handleStartTrip} className="text-xs font-bold text-[#1a00b2] hover:underline px-2 py-1">View Route</button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

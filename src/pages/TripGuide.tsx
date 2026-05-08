@@ -41,6 +41,7 @@ export const TripGuide: React.FC = () => {
   const { location, locateMe } = useLocation();
   
   const destination = routeLocation.state?.destination as NominatimResult;
+  const transitPlan = routeLocation.state?.transitPlan;
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [snapIndex, setSnapIndex] = useState(1);
   
@@ -149,7 +150,9 @@ export const TripGuide: React.FC = () => {
             
             <div className="flex flex-col items-end">
               <span className="bg-[#f2ca4b] text-[#1a00b2] px-3 py-1 rounded-full text-sm font-bold shadow-sm">
-                ₱{currentFare}
+                {activeVehicleId === 'tricycle' && transitPlan?.fareOverride 
+                  ? transitPlan.fareOverride 
+                  : `₱${currentFare}`}
               </span>
               
               {/* Fare Engine Tabs */}
@@ -180,7 +183,11 @@ export const TripGuide: React.FC = () => {
             </div>
             <div className="flex-1 pb-6">
               <p className="font-bold text-lg text-gray-800">{vehicleName} to {destName}</p>
-              <p className="text-gray-500 text-sm mb-3">Wait along the main road. Take the {vehicleName} route.</p>
+              <p className="text-gray-500 text-sm mb-3">
+                {activeVehicleId === 'tricycle' && transitPlan?.suggestedFirstLeg 
+                  ? transitPlan.suggestedFirstLeg 
+                  : `Wait along the main road. Take the ${vehicleName} route.`}
+              </p>
               
               <div className={`${activeVehicleConfig.bg} border border-gray-100 p-4 rounded-2xl relative overflow-hidden shadow-sm`}>
                 <div className={`absolute top-0 left-0 w-1.5 h-full ${activeVehicleConfig.color}`}></div>
