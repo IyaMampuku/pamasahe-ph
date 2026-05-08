@@ -16,6 +16,8 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [location, setLocation] = useState<Coordinates | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const lastUpdateRef = React.useRef<number>(0);
+
   const locateMe = React.useCallback(() => {
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser');
@@ -23,22 +25,41 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
+    // Set initial location quickly
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocation([position.coords.latitude, position.coords.longitude]);
         setError(null);
       },
-      (err) => {
-        setError(err.message);
-        setLocation(FALLBACK_LOCATION);
-      },
+      () => {}, // Ignore initial error, watchPosition will catch it
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const now = Date.now();
+        // Throttle updates to every 2 seconds
+        if (now - lastUpdateRef.current > 2000) {
+          setLocation([position.coords.latitude, position.coords.longitude]);
+          setError(null);
+          lastUpdateRef.current = now;
+        }
+      },
+      (err) => {
+        setError(err.message);
+        // Only set fallback if we don't have a location yet
+        setLocation(prev => prev || FALLBACK_LOCATION);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    locateMe();
+    const cleanup = locateMe();
+    return cleanup;
   }, [locateMe]);
 
   return (
