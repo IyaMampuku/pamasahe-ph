@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { t, setLanguage, language } = useTranslation();
+  const { lang, setLang } = useTranslation();
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -22,7 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   };
 
   const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'tl' : 'en');
+    setLang(lang === 'en' ? 'tl' : 'en');
   };
 
   return (
@@ -74,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <div className="text-[#1a00b2] mr-4"><Globe size={20} /></div>
                 <div className="flex-1 text-left font-medium">Language</div>
                 <div className="text-xs bg-blue-100 text-[#1a00b2] px-2 py-1 rounded-full font-bold">
-                  {language === 'en' ? 'English' : 'Tagalog'}
+                  {lang === 'en' ? 'English' : 'Tagalog'}
                 </div>
               </button>
 
