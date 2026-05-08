@@ -6,6 +6,7 @@ import { useLocation } from '../contexts/LocationContext';
 import { LeafletMap } from '../components/map/LeafletMap';
 import { Sidebar } from '../components/layout/Sidebar';
 import { BottomNav } from '../components/layout/BottomNav';
+import { BottomSheet } from '../components/layout/BottomSheet';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
