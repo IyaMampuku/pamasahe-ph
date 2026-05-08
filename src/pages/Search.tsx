@@ -145,22 +145,32 @@ const RecentItem: React.FC<{ icon: React.ReactNode; label: string; sub?: string;
   </button>
 );
 
-const SearchResult: React.FC<{ res: NominatimResult; onClick: () => void }> = ({ res, onClick }) => (
-  <button 
-    onClick={onClick}
-    className="w-full text-left p-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-start space-x-3 hover:bg-gray-50 transition-colors active:scale-[0.98]"
-  >
-    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#1a00b2] shrink-0">
-      <MapPin size={20} />
-    </div>
-    <div className="flex-1 overflow-hidden">
-      <p className="font-bold text-gray-900 truncate">
-        {res.display_name.split(',')[0]}
-      </p>
-      <p className="text-xs text-gray-500 truncate mt-0.5">
-        {res.display_name.split(',').slice(1).join(',')}
-      </p>
-    </div>
-  </button>
-);
+const SearchResult: React.FC<{ res: NominatimResult; onClick: () => void }> = ({ res, onClick }) => {
+  const parts = res.display_name.split(',');
+  const mainTitle = parts.length > 1 && parts[0].length < 10 
+    ? `${parts[0].trim()}, ${parts[1].trim()}` 
+    : parts[0].trim();
+  const subTitle = parts.length > 1 && parts[0].length < 10 
+    ? parts.slice(2).join(',').trim() 
+    : parts.slice(1).join(',').trim();
+
+  return (
+    <button 
+      onClick={onClick}
+      className="w-full text-left p-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-start space-x-3 hover:bg-gray-50 transition-colors active:scale-[0.98]"
+    >
+      <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#1a00b2] shrink-0">
+        <MapPin size={20} />
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <p className="font-bold text-gray-900 truncate">
+          {mainTitle}
+        </p>
+        <p className="text-xs text-gray-500 truncate mt-0.5">
+          {subTitle || 'Philippines'}
+        </p>
+      </div>
+    </button>
+  );
+};
 
