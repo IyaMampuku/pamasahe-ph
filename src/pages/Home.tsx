@@ -1,27 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, Search, Crosshair } from 'lucide-react';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useLocation } from '../contexts/LocationContext';
 import { LeafletMap } from '../components/map/LeafletMap';
+import { Sidebar } from '../components/layout/Sidebar';
+import { BottomNav } from '../components/layout/BottomNav';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { location, locateMe } = useLocation();
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex flex-col h-[100dvh] relative bg-gray-100 overflow-hidden">
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
       {/* Top Overlay */}
-      <div className="absolute top-0 inset-x-0 z-10 p-4 pt-6 bg-gradient-to-b from-black/50 to-transparent pointer-events-none">
+      <div className="absolute top-0 inset-x-0 z-10 p-4 pt-6 bg-gradient-to-b from-black/30 to-transparent pointer-events-none">
         <div className="flex items-center space-x-3 pointer-events-auto">
-          <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg text-[#1a00b2]">
+          <button 
+            onClick={() => setSidebarOpen(true)}
+            className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-xl text-[#1a00b2] active:scale-95 transition-transform"
+          >
             <Menu size={24} />
           </button>
           
           <div 
             onClick={() => navigate('/search')}
-            className="flex-1 h-12 bg-white rounded-full flex items-center px-4 shadow-lg cursor-text"
+            className="flex-1 h-12 bg-white rounded-3xl flex items-center px-4 shadow-xl cursor-text active:scale-[0.98] transition-transform"
           >
             <Search size={20} className="text-gray-400 mr-2" />
             <span className="text-gray-500 font-medium">{t.home.whereTo}</span>
@@ -31,18 +39,27 @@ export const Home: React.FC = () => {
 
       {/* Map Body */}
       <div className="flex-1 relative z-0">
-        {location && <LeafletMap center={location} markers={[{ position: location }]} />}
+        {location && (
+          <LeafletMap 
+            center={location} 
+            markers={[{ position: location }]} 
+            className="w-full h-full"
+          />
+        )}
       </div>
 
       {/* Bottom Floating Button */}
-      <div className="absolute bottom-6 right-4 z-10">
+      <div className="absolute bottom-28 right-4 z-10">
         <button 
           onClick={locateMe}
-          className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-xl text-[#1a00b2] border border-gray-100"
+          className="w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-2xl text-[#1a00b2] border border-gray-50 active:scale-90 transition-transform"
         >
           <Crosshair size={28} />
         </button>
       </div>
+
+      <BottomNav />
     </div>
   );
 };
+
