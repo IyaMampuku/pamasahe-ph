@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --color-primary: #1a00b2;
+  --color-secondary: #f2ca4b;
+}
+
+@layer base {
+  body {
+    @apply m-0 p-0 font-sans antialiased text-gray-900 bg-gray-50;
+    overflow: hidden;
+    touch-action: pan-x pan-y;
+  }
+  
+  #root {
+    @apply h-[100dvh] w-full overflow-hidden flex flex-col relative;
+  }
+}
