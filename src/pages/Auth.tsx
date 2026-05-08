@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, User } from 'lucide-react';
+import { Lock, User, Facebook, Twitter, Chrome as Google } from 'lucide-react';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
@@ -49,19 +49,28 @@ export const Auth: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input 
-            icon={<User size={20} />}
-            placeholder={t.auth.username}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <Input 
-            type="password"
-            icon={<Lock size={20} />}
-            placeholder={t.auth.password}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="space-y-4">
+            <Input 
+              icon={<User size={20} />}
+              placeholder={t.auth.username}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <div className="space-y-1">
+              <Input 
+                type="password"
+                icon={<Lock size={20} />}
+                placeholder={t.auth.password}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <div className="flex justify-end">
+                <button type="button" className="text-xs text-[#1a00b2] font-medium hover:underline">
+                  {t.auth.forgotPassword}
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div className="flex items-center space-x-2 pt-2">
             <input 
@@ -78,12 +87,47 @@ export const Auth: React.FC = () => {
 
           {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
 
-          <div className="pt-4">
+          <div className="pt-2">
             <Button type="submit" fullWidth size="lg">
               {t.auth.submit}
             </Button>
           </div>
         </form>
+
+        <div className="space-y-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-200"></span>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500">{t.auth.or}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center space-y-4">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t.auth.socialLogin}</p>
+            <div className="flex space-x-6">
+              <button className="p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all active:scale-95">
+                <Facebook className="text-[#1877F2]" size={24} />
+              </button>
+              <button className="p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all active:scale-95">
+                <Google className="text-[#EA4335]" size={24} />
+              </button>
+              <button className="p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all active:scale-95">
+                <Twitter className="text-black" size={24} />
+              </button>
+            </div>
+          </div>
+
+          <div className="text-center pt-2">
+            <p className="text-sm text-gray-600">
+              {t.auth.noAccount}{' '}
+              <button className="text-[#1a00b2] font-bold hover:underline">
+                {t.auth.signup}
+              </button>
+            </p>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

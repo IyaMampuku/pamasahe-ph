@@ -22,7 +22,10 @@ export const dictionary = {
       errorEmpty: "Fields cannot be empty.",
       errorTerms: "You must agree to the terms.",
       errorInvalid: "Invalid credentials.",
-      or: "or continue with"
+      or: "or continue with",
+      forgotPassword: "Forgot Password?",
+      noAccount: "Don't have an account?",
+      socialLogin: "Log In with"
     },
     home: {
       whereTo: "Where to?",
@@ -67,7 +70,10 @@ export const dictionary = {
       errorEmpty: "Hindi maaaring walang laman.",
       errorTerms: "Dapat kang sumang-ayon sa mga tuntunin.",
       errorInvalid: "Mali ang username o password.",
-      or: "o magpatuloy gamit ang"
+      or: "o magpatuloy gamit ang",
+      forgotPassword: "Nakalimutan ang Password?",
+      noAccount: "Wala pang account?",
+      socialLogin: "Mag-log In gamit ang"
     },
     home: {
       whereTo: "Saan tayo?",
