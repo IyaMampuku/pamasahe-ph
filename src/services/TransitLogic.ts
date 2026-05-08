@@ -65,7 +65,7 @@ export interface TransitPlan {
 
 export const getTransitPlan = (start: Coordinates, end: Coordinates, startName: string, endName: string): TransitPlan => {
   const startZone = getZoneType(start, startName);
-  const endZone = getZoneType(end, endName);
+  // const endZone = getZoneType(end, endName); // Reserved for future use (e.g. drop-off restrictions)
 
   // Subdivision Logic
   if (startZone === 'subdivision') {
