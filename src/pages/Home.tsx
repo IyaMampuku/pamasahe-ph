@@ -47,10 +47,16 @@ export const Home: React.FC = () => {
             className="w-full h-full"
           />
         )}
+        {/* Custom Watermark */}
+        <div className="absolute bottom-40 left-4 z-10 pointer-events-none">
+          <h2 className="text-2xl font-black text-white/40 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] italic tracking-tighter">
+            Pamasahe PH
+          </h2>
+        </div>
       </div>
 
       {/* Bottom Floating Button */}
-      <div className="absolute bottom-40 right-4 z-10">
+      <div className="absolute bottom-48 right-4 z-10">
         <button 
           onClick={locateMe}
           className="w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-2xl text-[#1a00b2] border border-gray-50 active:scale-90 transition-transform"
@@ -59,17 +65,35 @@ export const Home: React.FC = () => {
         </button>
       </div>
 
-      <BottomSheet isOpen={true} snapPoints={[20, 50, 85]} initialSnap={0}>
+      <BottomSheet isOpen={true} snapPoints={[20, 55, 90]} initialSnap={0}>
         <div className="space-y-6 pt-2 pb-32">
           <div className="flex items-center justify-between border-b pb-4">
-            <h2 className="text-xl font-bold text-[#1a00b2]">{t.home.whereTo}</h2>
+            <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Local vibe</h2>
+            <div className="flex items-center space-x-2 bg-gray-900 text-white px-3 py-1.5 rounded-2xl shadow-lg">
+              <span className="text-xs font-bold">32°</span>
+              <div className="w-1 h-1 bg-white/30 rounded-full" />
+              <Search size={14} className="text-white/50" />
+            </div>
           </div>
           
           <div className="space-y-4">
-            <div className="px-1 text-xs font-bold text-gray-400 uppercase tracking-widest">Recent Trips</div>
-            <RecentItem label="SM Mall of Asia" sub="Pasay City" />
-            <RecentItem label="Intramuros" sub="Manila" />
-            <RecentItem label="Ayala Malls Manila Bay" sub="Parañaque" />
+            <div className="px-1 flex items-center justify-between">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Nearby Routes</span>
+              <span className="text-[10px] font-bold text-[#1a00b2] uppercase tracking-wider">See All</span>
+            </div>
+            
+            <RecentItem label="Baclaran - Heritage" sub="High frequency • PHP 13" />
+            <RecentItem label="MOA - Buendia UV" sub="Terminal active • PHP 25" />
+            <RecentItem label="PITX Loop" sub="Main gateway • PHP 15" />
+          </div>
+
+          <div className="space-y-4 pt-4">
+            <div className="px-1 text-xs font-bold text-gray-400 uppercase tracking-widest">Area Highlights</div>
+            <div className="flex space-x-4 overflow-x-auto pb-4 no-scrollbar">
+              <HighlightCard label="Food Hub" count="12 spots" color="bg-orange-100 text-orange-700" />
+              <HighlightCard label="Terminals" count="5 hubs" color="bg-blue-100 text-blue-700" />
+              <HighlightCard label="Shopping" count="8 malls" color="bg-purple-100 text-purple-700" />
+            </div>
           </div>
         </div>
       </BottomSheet>
@@ -91,4 +115,9 @@ const RecentItem: React.FC<{ label: string; sub: string }> = ({ label, sub }) =>
   </button>
 );
 
-
+const HighlightCard: React.FC<{ label: string; count: string; color: string }> = ({ label, count, color }) => (
+  <div className={`shrink-0 w-32 p-4 rounded-2xl shadow-sm ${color}`}>
+    <p className="font-bold text-sm mb-1">{label}</p>
+    <p className="text-[10px] font-bold opacity-70 uppercase tracking-wider">{count}</p>
+  </div>
+);
