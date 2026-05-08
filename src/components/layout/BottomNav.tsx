@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Map, Bookmark, User } from 'lucide-react';
+import { Map, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export const BottomNav: React.FC = () => {
