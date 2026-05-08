@@ -56,7 +56,7 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Bottom Floating Button */}
-      <div className="absolute bottom-64 right-4 z-[90]">
+      <div className="absolute bottom-64 right-4 z-10">
         <button 
           onClick={locateMe}
           className="w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-2xl text-[#1a00b2] border border-gray-50 active:scale-90 transition-transform"
