@@ -82,9 +82,9 @@ export const Home: React.FC = () => {
               <span className="text-[10px] font-bold text-[#1a00b2] uppercase tracking-wider">See All</span>
             </div>
             
-            <RecentItem label="Baclaran - Heritage" sub="High frequency • PHP 13" />
-            <RecentItem label="MOA - Buendia UV" sub="Terminal active • PHP 25" />
-            <RecentItem label="PITX Loop" sub="Main gateway • PHP 15" />
+            <RecentItem label="Baclaran - Heritage" sub="High frequency • ₱13" />
+            <RecentItem label="MOA - Buendia UV" sub="Terminal active • ₱25" />
+            <RecentItem label="PITX Loop" sub="Main gateway • ₱15" />
           </div>
 
           <div className="space-y-4 pt-4">

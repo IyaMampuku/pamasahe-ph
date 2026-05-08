@@ -129,7 +129,7 @@ export const TripGuide: React.FC = () => {
             
             <div className="flex flex-col items-end">
               <span className="bg-[#f2ca4b] text-[#1a00b2] px-3 py-1 rounded-full text-sm font-bold shadow-sm">
-                PHP {currentFare}
+                ₱{currentFare}
               </span>
               
               {/* Fare Engine Tabs */}

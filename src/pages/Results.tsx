@@ -74,7 +74,7 @@ export const Results: React.FC = () => {
               </div>
               <div className="flex items-center space-x-1.5 text-xs font-bold text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
                 <CreditCard size={14} />
-                <span>PHP 25-35</span>
+                <span>₱25-35</span>
               </div>
             </div>
 
@@ -105,7 +105,7 @@ export const Results: React.FC = () => {
             </div>
             <div className="flex items-center justify-between mt-2">
               <div className="flex items-center space-x-3">
-                <span className="text-xs font-bold text-gray-500">PHP 40</span>
+                <span className="text-xs font-bold text-gray-500">₱40</span>
                 <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">Expect Traffic</span>
               </div>
               <button onClick={handleStartTrip} className="text-xs font-bold text-[#1a00b2] hover:underline px-2 py-1">View Route</button>
@@ -130,7 +130,7 @@ export const Results: React.FC = () => {
             </div>
             <div className="flex items-center justify-between mt-2">
               <div className="flex items-center space-x-3">
-                <span className="text-xs font-bold text-gray-500">PHP 13</span>
+                <span className="text-xs font-bold text-gray-500">₱13</span>
               </div>
               <button onClick={handleStartTrip} className="text-xs font-bold text-[#1a00b2] hover:underline px-2 py-1">View Route</button>
             </div>
@@ -154,7 +154,7 @@ export const Results: React.FC = () => {
             </div>
             <div className="flex items-center justify-between mt-2">
               <div className="flex items-center space-x-3">
-                <span className="text-xs font-bold text-gray-500">PHP 60+</span>
+                <span className="text-xs font-bold text-gray-500">₱60+</span>
                 <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold">Negotiable</span>
               </div>
               <button onClick={handleStartTrip} className="text-xs font-bold text-[#1a00b2] hover:underline px-2 py-1">View Route</button>

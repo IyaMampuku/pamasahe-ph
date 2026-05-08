@@ -94,7 +94,7 @@ export const AIChatbot: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-32 right-4 z-[90] w-14 h-14 bg-[#1a00b2] text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center border-2 border-white/20"
+            className="fixed bottom-32 right-4 z-10 w-14 h-14 bg-[#1a00b2] text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center border-2 border-white/20"
           >
             <MessageCircle size={28} />
           </motion.button>
@@ -166,7 +166,7 @@ export const AIChatbot: React.FC = () => {
                           </div>
                           <div className="relative">
                             <DollarSign size={16} className="absolute left-3 top-3 text-gray-400" />
-                            <input required type="number" placeholder="Estimated Fare (PHP)" className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#1a00b2] outline-none" />
+                            <input required type="number" placeholder="Estimated Fare (₱)" className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#1a00b2] outline-none" />
                           </div>
                           <button type="submit" className="w-full bg-[#1a00b2] text-white font-bold py-2.5 rounded-lg active:scale-95 transition-transform text-sm shadow-md mt-2">
                             Submit Report
