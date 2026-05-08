@@ -63,7 +63,7 @@ export interface TransitPlan {
   advice?: string;
 }
 
-export const getTransitPlan = (start: Coordinates, end: Coordinates, startName: string, endName: string): TransitPlan => {
+export const getTransitPlan = (start: Coordinates, _end: Coordinates, startName: string, _endName: string): TransitPlan => {
   const startZone = getZoneType(start, startName);
   // const endZone = getZoneType(end, endName); // Reserved for future use (e.g. drop-off restrictions)
 
