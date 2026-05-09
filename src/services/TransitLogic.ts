@@ -96,6 +96,88 @@ export const getBannedVehiclesForRoad = (rc: RoadClass): string[] => {
 };
 
 // ─────────────────────────────────────────────────────────────────
+//  HIGHWAY CORRIDOR DATABASE
+//  Source: OSM primary/trunk/motorway roads in Metro Manila
+// ─────────────────────────────────────────────────────────────────
+
+export type HighwayClass = 'national_highway' | 'primary' | 'trunk' | 'motorway';
+
+export interface HighwayCorridor {
+  name:      string;
+  shortName: string;      // used in prompts
+  type:      HighwayClass;
+  bounds:    { lat: [number, number]; lng: [number, number] };
+}
+
+export interface HighwayDetection {
+  detected:     boolean;
+  highway?:     HighwayCorridor;
+  kantoLabel:   string;   // e.g. "Kanto ng Alabang-Zapote Road"
+  kantoAdvice:  string;   // full "What to Say" transition prompt
+}
+
+/** Philippine National Highways & Primary Roads — Tricycle-Prohibited Segments */
+export const HIGHWAY_CORRIDORS: HighwayCorridor[] = [
+  { name: 'EDSA (Epifanio de los Santos Ave.)',      shortName: 'EDSA',                type: 'trunk',            bounds: { lat: [14.50, 14.72], lng: [121.03, 121.07] } },
+  { name: 'South Luzon Expressway (SLEX)',            shortName: 'SLEX',                type: 'motorway',         bounds: { lat: [14.28, 14.56], lng: [121.03, 121.10] } },
+  { name: 'Alabang-Zapote Road',                      shortName: 'Alabang-Zapote Rd.',  type: 'national_highway', bounds: { lat: [14.39, 14.48], lng: [120.97, 121.03] } },
+  { name: 'Dr. A. Santos Avenue (Sucat Road)',        shortName: 'Dr. A. Santos Ave.',  type: 'primary',          bounds: { lat: [14.47, 14.53], lng: [120.97, 121.07] } },
+  { name: 'Marcos Alvarez Avenue',                    shortName: 'Marcos Alvarez Ave.', type: 'primary',          bounds: { lat: [14.42, 14.47], lng: [120.96, 121.01] } },
+  { name: 'Aguirre Avenue',                           shortName: 'Aguirre Ave.',        type: 'primary',          bounds: { lat: [14.41, 14.46], lng: [121.01, 121.05] } },
+  { name: 'Quirino Avenue',                           shortName: 'Quirino Ave.',        type: 'primary',          bounds: { lat: [14.36, 14.43], lng: [121.01, 121.07] } },
+  { name: 'Coastal Road (Manila-Cavite Expressway)',  shortName: 'Coastal Road',        type: 'primary',          bounds: { lat: [14.33, 14.57], lng: [120.95, 120.99] } },
+  { name: 'Molino Boulevard',                         shortName: 'Molino Blvd.',        type: 'primary',          bounds: { lat: [14.38, 14.45], lng: [120.96, 121.03] } },
+  { name: 'C5 Road (C. P. Garcia Avenue)',            shortName: 'C5 Road',             type: 'primary',          bounds: { lat: [14.53, 14.70], lng: [121.07, 121.10] } },
+  { name: 'Macapagal Boulevard',                      shortName: 'Macapagal Blvd.',     type: 'primary',          bounds: { lat: [14.52, 14.56], lng: [120.98, 121.02] } },
+  { name: 'Commonwealth Avenue',                      shortName: 'Commonwealth Ave.',   type: 'primary',          bounds: { lat: [14.64, 14.75], lng: [121.04, 121.06] } },
+];
+
+/** Check if the straight-line path between two points crosses a highway bounding box */
+const pathCrossesHighway = (
+  p1: Coordinates, p2: Coordinates,
+  hw: HighwayCorridor,
+): boolean => {
+  const minLat = Math.min(p1[0], p2[0]), maxLat = Math.max(p1[0], p2[0]);
+  const minLng = Math.min(p1[1], p2[1]), maxLng = Math.max(p1[1], p2[1]);
+  // Bounding-box overlap check (conservative but reliable for routing purposes)
+  return !(maxLat < hw.bounds.lat[0] || minLat > hw.bounds.lat[1] ||
+           maxLng < hw.bounds.lng[0] || minLng > hw.bounds.lng[1]);
+};
+
+/** Detect if the route involves a national highway / primary road */
+export const detectHighwayInRoute = (
+  start:   Coordinates,
+  end:     Coordinates,
+  endName: string = '',
+): HighwayDetection => {
+  const lowerName = endName.toLowerCase();
+
+  // 1. Name-based detection (destination is on a highway)
+  for (const hw of HIGHWAY_CORRIDORS) {
+    if (lowerName.includes(hw.shortName.toLowerCase()) ||
+        lowerName.includes(hw.name.toLowerCase())) {
+      return buildHWDetection(hw);
+    }
+  }
+
+  // 2. Coordinate corridor crossing
+  for (const hw of HIGHWAY_CORRIDORS) {
+    if (pathCrossesHighway(start, end, hw)) {
+      return buildHWDetection(hw);
+    }
+  }
+
+  return { detected: false, kantoLabel: '', kantoAdvice: '' };
+};
+
+const buildHWDetection = (hw: HighwayCorridor): HighwayDetection => ({
+  detected:    true,
+  highway:     hw,
+  kantoLabel:  `Kanto ng ${hw.shortName}`,
+  kantoAdvice: `Baba po sa kanto ng ${hw.shortName}. Dito na po kayo sasakay ng Jeep/Bus.`,
+});
+
+// ─────────────────────────────────────────────────────────────────
 //  LEG & ROUTE OPTION MODELS
 // ─────────────────────────────────────────────────────────────────
 
@@ -212,6 +294,8 @@ export const generateRouteOptions = (
   startName:   string,
   endName:     string,
 ): RouteOption[] => {
+  // ── Highway detection (runs before zone checks) ──
+  const hwDetect = detectHighwayInRoute(startCoords, endCoords, endName);
   const startZone  = getZoneResult(startCoords, startName);
   const endZone    = getZoneResult(endCoords,   endName);
   const distKm     = haversineKm(startCoords, endCoords);
@@ -249,8 +333,6 @@ export const generateRouteOptions = (
     false, INTERIOR_RATIO
   ));
 
-  const commuterFareMin = commuterLegs.reduce((s, l) => s + l.fareMin, 0);
-  const commuterFareMax = commuterLegs.reduce((s, l) => s + l.fareMax, 0);
   const commuterTime    = Math.round(
     (startSubdiv ? 5 : 0) + distKm * SPEED.jeepney + (endSubdiv ? 5 : 0)
   );
@@ -282,61 +364,126 @@ export const generateRouteOptions = (
     false, INTERIOR_RATIO
   ));
 
-  const expressFareMin = expressLegs.reduce((s, l) => s + l.fareMin, 0);
-  const expressFareMax = expressLegs.reduce((s, l) => s + l.fareMax, 0);
   const expressTime    = Math.round(
     (startSubdiv ? 4 : 0) + distKm * SPEED[mainExpressVehicle] + (endSubdiv ? 5 : 0)
   );
 
-  // ── OPTION 3: Solo/Special (All-Tricycle) ──
+  // ── Highway kanto notes: inject into last tricycle-to-highway transfer ──
+  if (hwDetect.detected) {
+    // Find the leg that transitions onto the highway and add the kanto advice
+    const hwKantoLabel = hwDetect.kantoLabel;
+    const hwKantoAdvice = hwDetect.kantoAdvice;
+    // Commuter: annotate the jeepney leg's boarding
+    const cJeepLeg = commuterLegs.find(l => l.vehicle === 'jeepney');
+    if (cJeepLeg && !startSubdiv) {
+      cJeepLeg.whatToSay = `${hwKantoAdvice} Bayad po, isa hanggang ${destName}.`;
+      cJeepLeg.isTransferNode = true;
+      cJeepLeg.transferLabel  = `Highway Zone: ${hwDetect.highway?.shortName}`;
+    }
+    // Express: annotate the bus/train leg
+    const eBusLeg = expressLegs.find(l => l.vehicle === 'bus' || l.vehicle === 'train');
+    if (eBusLeg && !startSubdiv) {
+      eBusLeg.transferLabel = `Highway Zone: ${hwDetect.highway?.shortName}`;
+    }
+    // Prepend tricycle-to-kanto leg for non-subdivision starts where highway is involved
+    if (!startSubdiv) {
+      const KANTO_RATIO = 0.20;
+      const kantoTricycleLeg = makeLeg(
+        1, 'tricycle', startLabel, hwKantoLabel,
+        25, 40, 'standard',
+        `Pahatid po sa ${hwKantoLabel}.`,
+        true, KANTO_RATIO, hwKantoAdvice
+      );
+      // Re-number and rebalance ratios for commuter option
+      if (commuterLegs.length === 1) {
+        commuterLegs[0].step = 2;
+        commuterLegs[0].legRatio = 1 - KANTO_RATIO;
+        commuterLegs.unshift(kantoTricycleLeg);
+      }
+      // Re-number and rebalance for express option
+      if (expressLegs.length === 1) {
+        const expKantoLeg = { ...kantoTricycleLeg, transferLabel: `Board ${mainExpressVehicle === 'train' ? 'LRT/MRT' : 'Bus'} at ${hwKantoLabel}` };
+        expressLegs[0].step = 2;
+        expressLegs[0].legRatio = 1 - KANTO_RATIO;
+        expressLegs.unshift(expKantoLeg);
+      }
+    }
+  }
+
+  // ── OPTION 3: Solo/Special ──
+  // If highway detected: tricycle CANNOT traverse highway → force modified solo
   const soloBaseMin = Math.round(distKm * 12) + (startSubdiv?.fareMin ?? 0) + (endSubdiv?.fareMin ?? 0);
   const soloBaseMax = soloBaseMin + 40;
-  const soloLegs: RouteLeg[] = [makeLeg(
-    1, 'tricycle', startLabel, destName,
-    Math.max(soloBaseMin, 50), soloBaseMax + 10, 'special',
-    `Pahatid po sa ${destName}. Special trip.`,
-    false, 1.0
-  )];
-  const soloFareMin = soloLegs[0].fareMin;
-  const soloFareMax = soloLegs[0].fareMax;
-  const soloTime    = Math.round(distKm * SPEED.tricycle + (startSubdiv ? 5 : 0));
+  const soloLabel   = hwDetect.detected ? 'Modified Solo (Highway Route)' : 'The Solo/Special';
+  const soloTagline = hwDetect.detected ? `Tricycle + ${mainExpressVehicle === 'train' ? 'LRT/MRT' : 'Bus'} (highway restricted)` : 'All-Tricycle • Door to Door';
+  const soloBadge   = hwDetect.detected ? 'HIGHWAY SAFE' : 'CONVENIENT';
+  const soloBadgeColor = hwDetect.detected ? 'bg-orange-100 text-orange-700 border-orange-300' : 'bg-purple-100 text-purple-700 border-purple-300';
+
+  // If highway: solo becomes Tricycle-to-kanto + Bus for highway segment
+  let soloLegs: RouteLeg[];
+  if (hwDetect.detected && !startSubdiv) {
+    const KANTO_R = 0.25;
+    soloLegs = [
+      makeLeg(1, 'tricycle', startLabel, hwDetect.kantoLabel, 25, 45, 'standard',
+        `Pahatid po sa ${hwDetect.kantoLabel}. ${hwDetect.kantoAdvice}`, true, KANTO_R,
+        hwDetect.kantoAdvice),
+      makeLeg(2, 'bus', hwDetect.kantoLabel, destName,
+        Math.max(soloBaseMin, 40), soloBaseMax, 'standard',
+        `Bayad po, isa hanggang ${destName}.`, false, 1 - KANTO_R),
+    ];
+  } else {
+    soloLegs = [makeLeg(
+      1, 'tricycle', startLabel, destName,
+      Math.max(soloBaseMin, 50), soloBaseMax + 10, 'special',
+      `Pahatid po sa ${destName}. Special trip.`,
+      false, 1.0
+    )];
+  }
+  const soloFareMin = soloLegs.reduce((s, l) => s + l.fareMin, 0);
+  const soloFareMax = soloLegs.reduce((s, l) => s + l.fareMax, 0);
+  const soloTime    = hwDetect.detected
+    ? Math.round(distKm * 0.25 * SPEED.tricycle + distKm * 0.75 * SPEED.bus)
+    : Math.round(distKm * SPEED.tricycle + (startSubdiv ? 5 : 0));
+
+  // ── Attach highway detection metadata to all options ──
+  const hwBadgeExtra = hwDetect.detected ? ' 🚫🛺' : '';
 
   return [
     {
       id:               'commuter',
-      label:            'The Commuter Special',
+      label:            `The Commuter Special${hwBadgeExtra}`,
       tagline:          commuterLegs.map(l => l.vehicleLabel).join(' + '),
       priority:         'fare',
       legs:             commuterLegs,
-      totalFareMin:     commuterFareMin,
-      totalFareMax:     commuterFareMax,
+      totalFareMin:     commuterLegs.reduce((s, l) => s + l.fareMin, 0),
+      totalFareMax:     commuterLegs.reduce((s, l) => s + l.fareMax, 0),
       estimatedMinutes: commuterTime,
       badge:            'CHEAPEST',
       badgeColor:       'bg-green-100 text-green-700 border-green-300',
     },
     {
       id:               'express',
-      label:            'The Express',
+      label:            `The Express${hwBadgeExtra}`,
       tagline:          expressLegs.map(l => l.vehicleLabel).join(' + '),
       priority:         'time',
       legs:             expressLegs,
-      totalFareMin:     expressFareMin,
-      totalFareMax:     expressFareMax,
+      totalFareMin:     expressLegs.reduce((s, l) => s + l.fareMin, 0),
+      totalFareMax:     expressLegs.reduce((s, l) => s + l.fareMax, 0),
       estimatedMinutes: expressTime,
       badge:            'FASTEST',
       badgeColor:       'bg-blue-100 text-blue-700 border-blue-300',
     },
     {
       id:               'solo',
-      label:            'The Solo/Special',
-      tagline:          'All-Tricycle • Door to Door',
+      label:            soloLabel,
+      tagline:          soloTagline,
       priority:         'convenience',
       legs:             soloLegs,
       totalFareMin:     soloFareMin,
       totalFareMax:     soloFareMax,
       estimatedMinutes: soloTime,
-      badge:            'CONVENIENT',
-      badgeColor:       'bg-purple-100 text-purple-700 border-purple-300',
+      badge:            soloBadge,
+      badgeColor:       soloBadgeColor,
     },
   ];
 };

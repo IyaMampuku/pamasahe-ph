@@ -3,7 +3,7 @@ import { useNavigate, useLocation as useRouteLocation } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, CreditCard, AlertCircle, ChevronRight, Bike, Truck, Bus, Train } from 'lucide-react';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useLocation } from '../contexts/LocationContext';
-import { generateRouteOptions } from '../services/TransitLogic';
+import { generateRouteOptions, detectHighwayInRoute } from '../services/TransitLogic';
 import type { RouteOption, RouteLeg } from '../services/TransitLogic';
 import type { NominatimResult } from '../services/api';
 
@@ -110,6 +110,15 @@ export const Results: React.FC = () => {
     );
   }, [userCoords, destination]);
 
+  const hwDetect = useMemo(() => {
+    if (!userCoords || !destination) return null;
+    return detectHighwayInRoute(
+      userCoords,
+      [parseFloat(destination.lat), parseFloat(destination.lon)],
+      destination.display_name,
+    );
+  }, [userCoords, destination]);
+
   if (!destination) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-gray-50 p-6">
@@ -154,7 +163,23 @@ export const Results: React.FC = () => {
 
       {/* Options List */}
       <div className="flex-1 overflow-y-auto no-scrollbar -mt-5 px-4 pt-4 pb-24 space-y-4">
-        {/* Subdivision alert (only if relevant) */}
+        {/* Highway restriction alert */}
+          {hwDetect?.detected && (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-2xl flex items-start space-x-3">
+              <span className="text-xl">🚫</span>
+              <div>
+                <p className="text-[11px] font-black text-red-800 uppercase tracking-widest mb-1">
+                  National Highway — Tricycle Restricted
+                </p>
+                <p className="text-sm text-red-700 font-medium leading-relaxed">
+                  Route crosses <strong>{hwDetect.highway?.name}</strong>. Tricycles are <strong>prohibited</strong> on this road. All options below enforce a Jeep/Bus switch at the highway entry.
+                </p>
+                <p className="text-xs text-red-600 font-bold mt-2 italic">"{hwDetect.kantoAdvice}"</p>
+              </div>
+            </div>
+          )}
+
+          {/* Subdivision alert */}
           {hasSubdivision && (
           <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3">
             <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={18} />
@@ -163,7 +188,7 @@ export const Results: React.FC = () => {
                 Village Zone Detected
               </p>
               <p className="text-sm text-amber-700 leading-relaxed">
-                Route starts or ends inside a gated community. A <strong>Tricycle</strong> is required for the first/last mile. Jeep and Bus are restricted on interior roads.
+                Route starts or ends inside a gated community. A <strong>Tricycle</strong> is required for the first/last mile.
               </p>
             </div>
           </div>

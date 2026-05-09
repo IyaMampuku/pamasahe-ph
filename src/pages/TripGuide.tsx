@@ -8,7 +8,7 @@ import { useLocation, type Coordinates } from '../contexts/LocationContext';
 import { getRoute, type RouteData, type NominatimResult } from '../services/api';
 import { LeafletMap } from '../components/map/LeafletMap';
 import { BottomSheet } from '../components/layout/BottomSheet';
-import { splitGeometry } from '../services/TransitLogic';
+import { splitGeometry, detectHighwayInRoute } from '../services/TransitLogic';
 import type { RouteOption, RouteLeg } from '../services/TransitLogic';
 
 // ── Style helpers ───────────────────────────────────────────────────
@@ -154,6 +154,14 @@ export const TripGuide: React.FC = () => {
   const totalFareMax = enrichedLegs.reduce((s, l) => s + l.fareMax, 0);
   const inSubdivision = enrichedLegs.some(l => l.fareType === 'special');
 
+  // Highway warning for map overlay: show if a tricycle-only route would cross a highway
+  const hwDetect = location && destination
+    ? detectHighwayInRoute(location, destCoords, destination.display_name)
+    : null;
+  const hwMapWarning = hwDetect?.detected
+    ? `Tricycles restricted on ${hwDetect.highway?.shortName}. Switching to Jeep/Bus.`
+    : undefined;
+
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-100 overflow-hidden relative">
 
@@ -175,9 +183,11 @@ export const TripGuide: React.FC = () => {
           routeLegs={hasLegs ? mapLegs : undefined}
           route={!hasLegs ? routeData?.geometry : undefined}
           routeColor="#1a00b2"
+          highwayWarning={hwMapWarning}
           zoom={15}
         />
       </div>
+
 
       {/* Center Button (behind sheet) */}
       <div className="absolute bottom-64 right-4 z-10">

@@ -49,15 +49,14 @@ export interface LeafletMapLeg {
 }
 
 interface LeafletMapProps {
-  center:      Coordinates;
-  markers?:    { position: Coordinates; popup?: string }[];
-  // Single-polyline (legacy / home screen)
-  route?:      Coordinates[];
-  routeColor?: string;
-  // Multi-leg (TripGuide intermodal)
-  routeLegs?:  LeafletMapLeg[];
-  zoom?:       number;
-  className?:  string;
+  center:          Coordinates;
+  markers?:        { position: Coordinates; popup?: string }[];
+  route?:          Coordinates[];
+  routeColor?:     string;
+  routeLegs?:      LeafletMapLeg[];
+  highwayWarning?: string;   // When set, shows tricycle-restricted overlay
+  zoom?:           number;
+  className?:      string;
 }
 
 export const LeafletMap: React.FC<LeafletMapProps> = ({
@@ -66,6 +65,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   route   = [],
   routeColor = '#1a00b2',
   routeLegs,
+  highwayWarning,
   zoom = 14,
   className = 'w-full h-full z-0',
 }) => {
@@ -86,7 +86,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   }
 
   return (
-    <div className={className}>
+    <div className={`${className} relative`}>
       <MapContainer center={center} zoom={zoom} zoomControl={false} className="w-full h-full">
         <TileLayer attribution="&copy; OSM" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <MapUpdater center={center} zoom={zoom} />
@@ -124,6 +124,16 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           <TransferMarker key={`tn-${i}`} position={tn.position} color={tn.color} label={tn.label} />
         ))}
       </MapContainer>
+
+      {/* Highway restriction warning overlay */}
+      {highwayWarning && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[500] pointer-events-none">
+          <div className="bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-2xl shadow-xl flex items-center space-x-2 whitespace-nowrap">
+            <span>🚫</span>
+            <span>{highwayWarning}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
