@@ -3,6 +3,7 @@ import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom'
 import { Menu, Search, Crosshair, Map, Bookmark, MessageSquare } from 'lucide-react';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useLocation } from '../contexts/LocationContext';
+import { useHistory } from '../contexts/HistoryContext';
 import { LeafletMap } from '../components/map/LeafletMap';
 import { Sidebar } from '../components/layout/Sidebar';
 import { BottomSheet } from '../components/layout/BottomSheet';
@@ -45,6 +46,7 @@ export const Home: React.FC = () => {
   const navigate  = useNavigate();
   const { t }     = useTranslation();
   const { location, locateMe } = useLocation();
+  const { history } = useHistory();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [sheetSnap, setSheetSnap]       = useState(0);
 
@@ -129,12 +131,24 @@ export const Home: React.FC = () => {
 
           <div className="space-y-4">
             <div className="px-1 flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Nearby Routes</span>
-              <span className="text-[10px] font-bold text-[#1a00b2] uppercase tracking-wider">See All</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Recent Activity</span>
+              <button onClick={() => navigate('/search')} className="text-[10px] font-bold text-[#1a00b2] uppercase tracking-wider">Search</button>
             </div>
-            <RecentItem label="Baclaran - Heritage"  sub="High frequency • ₱13" />
-            <RecentItem label="MOA - Buendia UV"     sub="Terminal active • ₱25" />
-            <RecentItem label="PITX Loop"            sub="Main gateway • ₱15" />
+            {history.length > 0 ? (
+              history.slice(0, 3).map((item) => (
+                <RecentItem 
+                  key={item.place_id} 
+                  label={item.display_name.split(',')[0]} 
+                  sub={item.display_name.split(',').slice(1, 3).join(',')} 
+                  onClick={() => navigate('/results', { state: { destination: item } })}
+                />
+              ))
+            ) : (
+              <div className="bg-gray-50 p-6 rounded-2xl text-center">
+                <Search size={24} className="mx-auto text-gray-200 mb-2" />
+                <p className="text-xs text-gray-400 font-medium">Your recent searches will appear here.</p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 pt-2">
@@ -151,14 +165,17 @@ export const Home: React.FC = () => {
   );
 };
 
-const RecentItem: React.FC<{ label: string; sub: string }> = ({ label, sub }) => (
-  <button className="w-full flex items-center p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+const RecentItem: React.FC<{ label: string; sub: string; onClick: () => void }> = ({ label, sub, onClick }) => (
+  <button 
+    onClick={onClick}
+    className="w-full flex items-center p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
+  >
     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mr-4 shadow-sm text-[#1a00b2]">
       <Search size={20} />
     </div>
-    <div className="text-left">
-      <p className="font-bold text-gray-800">{label}</p>
-      <p className="text-xs text-gray-500 mt-0.5">{sub}</p>
+    <div className="text-left flex-1 overflow-hidden">
+      <p className="font-bold text-gray-800 truncate">{label}</p>
+      <p className="text-xs text-gray-500 mt-0.5 truncate">{sub}</p>
     </div>
   </button>
 );

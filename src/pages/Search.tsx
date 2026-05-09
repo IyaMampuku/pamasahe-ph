@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Search as SearchIcon, Clock, Home as HomeIcon, Briefcase, Plus, Star } from 'lucide-react';
-import { useTranslation } from '../contexts/TranslationContext';
+import { ArrowLeft, MapPin, Search as SearchIcon, Clock, Home as HomeIcon, Briefcase, Plus, X } from 'lucide-react';
 import { searchLocation, type NominatimResult } from '../services/api';
 import { useDebounce } from '../hooks/useDebounce';
+import { useHistory } from '../contexts/HistoryContext';
 
 export const Search: React.FC = () => {
   const navigate = useNavigate();
-  useTranslation();
+  const { history, home, work, addToHistory, setHomeLocation, setWorkLocation, clearHistory } = useHistory();
   
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, 500);
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [settingMode, setSettingMode] = useState<'home' | 'work' | null>(null);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -29,23 +30,58 @@ export const Search: React.FC = () => {
   }, [debouncedQuery]);
 
   const handleSelect = (result: NominatimResult) => {
+    if (settingMode === 'home') {
+      setHomeLocation(result);
+      setSettingMode(null);
+      setQuery('');
+      return;
+    }
+    if (settingMode === 'work') {
+      setWorkLocation(result);
+      setSettingMode(null);
+      setQuery('');
+      return;
+    }
+    
+    addToHistory(result);
     navigate('/results', { state: { destination: result } });
+  };
+
+  const handleQuickAction = (type: 'home' | 'work') => {
+    const loc = type === 'home' ? home : work;
+    if (loc) {
+      handleSelect(loc);
+    } else {
+      setSettingMode(type);
+      // Optional: show a toast or message
+    }
   };
 
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-50 overflow-hidden">
       <div className="bg-white p-4 pt-6 shadow-md z-10">
+        {settingMode && (
+          <div className="mb-4 bg-blue-50 p-3 rounded-2xl flex items-center justify-between border border-blue-100 animate-in fade-in slide-in-from-top-1">
+            <p className="text-xs font-bold text-[#1a00b2] uppercase tracking-wider">
+              Setting {settingMode === 'home' ? 'Home' : 'Work'} Location...
+            </p>
+            <button onClick={() => setSettingMode(null)} className="text-[#1a00b2]">
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center space-x-3 mb-4">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full">
+          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
             <ArrowLeft size={24} />
           </button>
-          <div className="flex-1 bg-gray-100 rounded-2xl flex items-center px-4 h-12 border border-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1a00b2]/20 transition-all">
+          <div className="flex-1 bg-gray-100 rounded-2xl flex items-center px-4 h-12 border border-transparent focus-within:bg-white focus-within:border-[#1a00b2]/20 focus-within:ring-4 focus-within:ring-[#1a00b2]/5 transition-all">
             <SearchIcon size={20} className="text-gray-400 mr-3" />
             <input 
               type="text"
               autoFocus
-              className="bg-transparent border-none outline-none flex-1 w-full text-base font-medium"
-              placeholder="Search here"
+              className="bg-transparent border-none outline-none flex-1 w-full text-base font-medium placeholder:text-gray-400"
+              placeholder={settingMode ? `Search for your ${settingMode}...` : "Search here"}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -53,8 +89,18 @@ export const Search: React.FC = () => {
         </div>
 
         <div className="flex space-x-3 overflow-x-auto no-scrollbar pb-2">
-          <QuickAction icon={<HomeIcon size={18} />} label="Home" sub="Tolentino St" />
-          <QuickAction icon={<Briefcase size={18} />} label="Work" sub="Set location" />
+          <QuickAction 
+            icon={<HomeIcon size={18} />} 
+            label="Home" 
+            sub={home ? home.display_name.split(',')[0] : "Set location"} 
+            onClick={() => handleQuickAction('home')}
+          />
+          <QuickAction 
+            icon={<Briefcase size={18} />} 
+            label="Work" 
+            sub={work ? work.display_name.split(',')[0] : "Set location"} 
+            onClick={() => handleQuickAction('work')}
+          />
           <QuickAction icon={<Plus size={18} />} label="More" />
         </div>
       </div>
@@ -82,37 +128,39 @@ export const Search: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Recent</h3>
-                <span className="text-[10px] font-bold text-[#1a00b2] uppercase tracking-wider">History</span>
+                <button 
+                  onClick={clearHistory}
+                  className="text-[10px] font-bold text-gray-400 uppercase tracking-wider hover:text-red-500"
+                >
+                  Clear History
+                </button>
               </div>
               
-              <RecentItem 
-                icon={<Star size={20} className="fill-yellow-400 text-yellow-400" />} 
-                label="Tolentino St" 
-                sub="Las Piñas, Metro Manila" 
-              />
-              <RecentItem 
-                icon={<Clock size={20} />} 
-                label="Friendship Gate" 
-                sub="Talon Singko, Molino VI, Las Piñas" 
-              />
-              <RecentItem 
-                icon={<Clock size={20} />} 
-                label="NITORI Mall of Asia" 
-                sub="3rd Floor, SM Mall of Asia, Seaside Blvd"
-                status="Open • Closes 10:00 PM"
-              />
-              <RecentItem 
-                icon={<Clock size={20} />} 
-                label="PITX Gateway" 
-                sub="Parañaque City" 
-              />
+              {history.length > 0 ? (
+                history.map((item) => (
+                  <RecentItem 
+                    key={item.place_id}
+                    icon={<Clock size={20} />} 
+                    label={item.display_name.split(',')[0]} 
+                    sub={item.display_name.split(',').slice(1, 3).join(',')} 
+                    onClick={() => handleSelect(item)}
+                  />
+                ))
+              ) : (
+                <div className="py-10 text-center">
+                  <Clock size={40} className="mx-auto text-gray-200 mb-3" />
+                  <p className="text-sm text-gray-400 font-medium">No recent searches yet.</p>
+                </div>
+              )}
             </div>
             
-            <div className="text-center py-4">
-              <button className="text-sm font-bold text-blue-600 hover:underline">
-                More from recent history
-              </button>
-            </div>
+            {history.length > 5 && (
+              <div className="text-center py-4">
+                <button className="text-sm font-bold text-[#1a00b2] hover:underline">
+                  More from recent history
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -120,8 +168,11 @@ export const Search: React.FC = () => {
   );
 };
 
-const QuickAction: React.FC<{ icon: React.ReactNode; label: string; sub?: string }> = ({ icon, label, sub }) => (
-  <button className="flex items-center space-x-3 px-4 py-2.5 bg-white rounded-2xl border border-gray-100 shadow-sm shrink-0 active:scale-95 transition-transform">
+const QuickAction: React.FC<{ icon: React.ReactNode; label: string; sub?: string; onClick?: () => void }> = ({ icon, label, sub, onClick }) => (
+  <button 
+    onClick={onClick}
+    className="flex items-center space-x-3 px-4 py-2.5 bg-white rounded-2xl border border-gray-100 shadow-sm shrink-0 active:scale-95 transition-transform"
+  >
     <div className="p-2 bg-blue-50 text-[#1a00b2] rounded-xl">
       {icon}
     </div>
@@ -132,8 +183,11 @@ const QuickAction: React.FC<{ icon: React.ReactNode; label: string; sub?: string
   </button>
 );
 
-const RecentItem: React.FC<{ icon: React.ReactNode; label: string; sub?: string; status?: string }> = ({ icon, label, sub, status }) => (
-  <button className="w-full flex items-start space-x-4 p-2 group active:bg-gray-100 rounded-xl transition-colors">
+const RecentItem: React.FC<{ icon: React.ReactNode; label: string; sub?: string; status?: string; onClick: () => void }> = ({ icon, label, sub, status, onClick }) => (
+  <button 
+    onClick={onClick}
+    className="w-full flex items-start space-x-4 p-2 group active:bg-gray-100 rounded-xl transition-colors"
+  >
     <div className="mt-1 text-gray-400 group-active:text-[#1a00b2] transition-colors">
       {icon}
     </div>
@@ -173,4 +227,3 @@ const SearchResult: React.FC<{ res: NominatimResult; onClick: () => void }> = ({
     </button>
   );
 };
-

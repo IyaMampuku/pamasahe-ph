@@ -10,6 +10,7 @@ import { Results } from './pages/Results';
 import { TripGuide } from './pages/TripGuide';
 import { useAuth } from './contexts/AuthContext';
 import { SupportDesk } from './components/support/SupportDesk';
+import { HistoryProvider } from './contexts/HistoryContext';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -19,23 +20,25 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 export const App: React.FC = () => {
   return (
-    <BrowserRouter basename="/pamasahe-ph">
-      <Routes>
-        <Route path="/" element={<Splash />} />
-        <Route path="/language" element={<Language />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/signup" element={<Signup />} />
-        
-        {/* Protected Routes */}
-        <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-        <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
-        <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
-        <Route path="/trip" element={<ProtectedRoute><TripGuide /></ProtectedRoute>} />
-        
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      <SupportDesk />
-    </BrowserRouter>
+    <HistoryProvider>
+      <BrowserRouter basename="/pamasahe-ph">
+        <Routes>
+          <Route path="/" element={<Splash />} />
+          <Route path="/language" element={<Language />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/signup" element={<Signup />} />
+          
+          {/* Protected Routes */}
+          <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
+          <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
+          <Route path="/trip" element={<ProtectedRoute><TripGuide /></ProtectedRoute>} />
+          
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <SupportDesk />
+      </BrowserRouter>
+    </HistoryProvider>
   );
 };
 
