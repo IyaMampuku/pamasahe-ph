@@ -125,11 +125,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         ))}
       </MapContainer>
 
-      {/* Highway restriction warning overlay */}
+      {/* Highway restriction warning overlay — Minimalist floating pill */}
       {highwayWarning && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[500] pointer-events-none">
-          <div className="bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-2xl shadow-xl flex items-center space-x-2 whitespace-nowrap">
-            <span>🚫</span>
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[500] pointer-events-none w-full px-10">
+          <div className="bg-red-500/95 backdrop-blur-md text-white text-[10px] font-black px-4 py-2 rounded-full shadow-lg flex items-center justify-center space-x-2 uppercase tracking-widest border border-red-400/30 mx-auto max-w-max">
             <span>{highwayWarning}</span>
           </div>
         </div>

@@ -194,101 +194,110 @@ export const TripGuide: React.FC = () => {
 
       {/* Center Button — dynamic position to avoid sheet overlap */}
       <div
-        className="absolute right-5 z-10 transition-all duration-300"
-        style={{ bottom: `calc(${snapIndex === 0 ? 12 : snapIndex === 1 ? 60 : 90}vh + 20px)` }}
+        className="absolute right-6 z-10 transition-all duration-300"
+        style={{ bottom: `calc(${snapIndex === 0 ? 12 : snapIndex === 1 ? 60 : 90}vh + 24px)` }}
       >
         <button
           onClick={locateMe}
-          className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xl text-[#1a00b2] border border-gray-100 active:scale-90 transition-transform"
+          className="w-14 h-14 bg-white rounded-[1.25rem] flex items-center justify-center shadow-lg text-[#1a00b2] border border-gray-100 active:scale-95 transition-all duration-200"
         >
-          <Crosshair size={24} />
+          <Crosshair size={24} strokeWidth={2.5} />
         </button>
       </div>
 
       {/* Bottom Sheet */}
       <BottomSheet isOpen={true} snapPoints={[12, 60, 90]} initialSnap={1} onSnapChange={setSnapIndex}>
-        <div className="space-y-6 pt-3 pb-28">
+        <div className="space-y-8 pt-4 pb-28">
 
-          {/* ── Header ── */}
+          {/* ── Minimalist Header ── */}
           <div className="flex items-start justify-between px-1">
-            <div className="flex items-center space-x-3">
-              {snapIndex === 0 && (
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
-                </span>
-              )}
-              <div>
-                <h2 className={`text-2xl font-black transition-colors ${snapIndex === 0 ? 'text-green-600' : 'text-[#1a00b2]'}`}>
-                  {snapIndex === 0 ? 'In Route' : (selectedOption?.label ?? 'Trip Overview')}
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                {snapIndex === 0 && (
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                )}
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+                  {snapIndex === 0 ? 'Live Guide' : (selectedOption?.label.split('—')[0].trim() ?? 'Trip Plan')}
                 </h2>
-                {selectedOption && <p className="text-sm text-gray-400 mt-0.5">{selectedOption.tagline}</p>}
               </div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                {selectedOption?.tagline}
+              </p>
             </div>
 
-            {/* Fare badge */}
-            <span className="bg-[#f2ca4b] text-[#1a00b2] px-4 py-1.5 rounded-full text-base font-black shadow-sm shrink-0">
-              ₱{totalFareMin}–{totalFareMax}
-            </span>
+            {/* Subtle Fare Badge */}
+            <div className="bg-gray-50 border border-gray-100 px-4 py-2 rounded-2xl text-right">
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Est. Fare</p>
+              <p className="text-lg font-black text-[#1a00b2]">₱{totalFareMin} – {totalFareMax}</p>
+            </div>
           </div>
 
-          {/* ── Subdivision alert ── */}
+          {/* ── Village Alert ── */}
           {inSubdivision && (
-            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3">
-              <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={18} />
-              <p className="text-sm text-amber-700 font-medium leading-relaxed">
-                Village zone: Jeep/Bus restricted on interior roads. Follow legs in order.
+            <div className="bg-amber-50/50 border border-amber-200/50 p-5 rounded-[2rem] flex items-start space-x-4">
+              <div className="w-10 h-10 bg-amber-100 rounded-2xl flex items-center justify-center shrink-0">
+                <AlertCircle className="text-amber-600" size={18} />
+              </div>
+              <p className="text-xs text-amber-800 font-bold leading-relaxed">
+                Village restrictions active. Tricycle required for interior legs.
               </p>
             </div>
           )}
 
-          {/* ── Step picker ── (if multiple legs) */}
+          {/* ── Step Tabs ── */}
           {enrichedLegs.length > 1 && (
-            <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
+            <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-1 px-1">
               {enrichedLegs.map(leg => (
                 <button
                   key={leg.step}
                   onClick={() => setActiveStep(leg.step)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold shrink-0 transition-colors border ${
+                  className={`flex items-center space-x-2 px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest shrink-0 transition-all duration-300 border ${
                     activeStep === leg.step
-                      ? 'text-white border-transparent'
-                      : 'bg-white border-gray-200 text-gray-500'
+                      ? 'text-white border-transparent shadow-md'
+                      : 'bg-gray-50 border-gray-100 text-gray-400'
                   }`}
                   style={activeStep === leg.step ? { backgroundColor: leg.color, borderColor: leg.color } : {}}
                 >
-                  <span>Leg {leg.step}</span>
-                  <span className="opacity-60">·</span>
+                  <span>Step {leg.step}</span>
+                  <span className="opacity-40">·</span>
                   <span>{leg.vehicleLabel}</span>
                 </button>
               ))}
             </div>
           )}
 
-          {/* ── Leg cards ── */}
-          <div className="space-y-0">
+          {/* ── Detailed Leg List ── */}
+          <div className="space-y-2">
             {enrichedLegs.map(leg => (
               <LegCard key={leg.step} leg={leg} isActive={leg.step === activeStep} />
             ))}
+
+            {/* Arrival Step */}
+            <div className={`flex space-x-5 transition-opacity duration-300 ${activeStep === enrichedLegs.length + 1 ? 'opacity-100' : 'opacity-30'}`}>
+              <div className="flex flex-col items-center">
+                <button 
+                  onClick={() => setActiveStep(enrichedLegs.length + 1)}
+                  className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-black text-sm shadow-lg shrink-0"
+                >
+                  {enrichedLegs.length + 1}
+                </button>
+              </div>
+              <div className="flex-1 pb-6">
+                <p className="font-black text-gray-900 text-lg">Destination reached</p>
+                <p className="text-xs text-gray-400 mt-1 font-bold uppercase tracking-widest">{destination.display_name.split(',')[0]}</p>
+              </div>
+            </div>
           </div>
 
-          {/* ── Final walk step ── */}
-          <div className="flex space-x-4 items-center">
-            <div className="w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-              {enrichedLegs.length + 1}
-            </div>
-            <div className="flex-1">
-              <p className="font-black text-gray-800">Walk to Destination</p>
-              <p className="text-gray-400 text-sm mt-0.5">Arrive at {destination.display_name.split(',')[0]}.</p>
-            </div>
+          {/* ── Action ── */}
+          <div className="pt-4">
+            <button
+              onClick={() => navigate('/home')}
+              className="w-full bg-[#1a00b2] text-white font-black py-5 rounded-[2rem] active:scale-95 transition-all duration-200 shadow-xl shadow-[#1a00b2]/20 text-sm uppercase tracking-[0.2em]"
+            >
+              {t.trip.finish}
+            </button>
           </div>
-
-          {/* ── Finish ── */}
-          <button
-            onClick={() => navigate('/home')}
-            className="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform shadow-md text-base"
-          >
-            {t.trip.finish}
-          </button>
         </div>
       </BottomSheet>
     </div>

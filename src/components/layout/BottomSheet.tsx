@@ -60,20 +60,21 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
 
       {/* ── Sticky header — always visible (nav tabs, route title, etc.) ── */}
       {stickyHeader && (
-        <div className="shrink-0 px-4">
+        <div className="shrink-0 px-4 bg-white relative z-10">
           {stickyHeader}
         </div>
       )}
 
       {/* ── Scrollable content — hidden when collapsed ── */}
       <div
-        className="flex-1 overflow-y-auto overscroll-contain px-4"
+        className="flex-1 overflow-y-auto overscroll-contain px-4 transition-all duration-300"
         style={{
           // When collapsed: hide content entirely so nothing bleeds through
-          maxHeight: isCollapsed ? 0 : undefined,
+          maxHeight: isCollapsed ? 0 : '100%',
           overflow:  isCollapsed ? 'hidden' : 'auto',
-          paddingBottom: 32,
-          transition: 'max-height 0.2s ease',
+          opacity:   isCollapsed ? 0 : 1,
+          visibility: isCollapsed ? 'hidden' : 'visible',
+          paddingBottom: 40,
         }}
       >
         {children}
