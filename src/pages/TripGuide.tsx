@@ -45,48 +45,51 @@ const LegCard: React.FC<LegCardProps> = ({ leg, isActive }) => {
   const pill = VEHICLE_PILL[leg.vehicle] ?? 'bg-gray-600 text-white';
 
   return (
-    <div className={`flex space-x-4 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-50'}`}>
+    <div className={`flex space-x-4 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-40'}`}>
       {/* Step dot + connector */}
       <div className="flex flex-col items-center">
         <div
-          className="w-9 h-9 rounded-full text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0"
+          className="w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-sm shadow-md shrink-0"
           style={{ backgroundColor: leg.color }}
         >
           {leg.step}
         </div>
-        <div className="w-0.5 flex-1 mt-2" style={{ backgroundColor: leg.color + '40' }} />
+        <div className="w-0.5 flex-1 mt-3" style={{ backgroundColor: leg.color + '30' }} />
       </div>
 
       {/* Content */}
-      <div className="flex-1 pb-5">
-        <div className="flex items-center justify-between mb-1">
-          <p className="font-bold text-gray-800">{leg.vehicleLabel} → <span style={{ color: leg.color }}>{leg.to}</span></p>
-          <span className={`text-[11px] font-black px-2 py-0.5 rounded-full border ${
+      <div className="flex-1 pb-8">
+        <div className="flex items-start justify-between mb-2 gap-3">
+          <p className="font-black text-gray-800 text-base leading-snug">
+            {leg.vehicleLabel} <span className="text-gray-400 font-normal">→</span>{' '}
+            <span style={{ color: leg.color }}>{leg.to}</span>
+          </p>
+          <span className={`shrink-0 text-[11px] font-black px-2.5 py-1 rounded-full border ${
             leg.fareType === 'special'
               ? 'bg-amber-50 text-amber-700 border-amber-300'
               : 'bg-gray-100 text-gray-500 border-gray-200'
           }`}>{leg.fareLabel}</span>
         </div>
-        <p className="text-xs text-gray-400 mb-3">{leg.from} → {leg.to}</p>
+        <p className="text-xs text-gray-400 mb-4">{leg.from} → {leg.to}</p>
 
         {/* Transfer alert */}
         {leg.isTransferNode && leg.transferLabel && (
-          <div className="flex items-center space-x-2 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl mb-3">
-            <ChevronsRight size={14} className="text-amber-600 shrink-0" />
-            <p className="text-xs font-bold text-amber-700">{leg.transferLabel}</p>
+          <div className="flex items-center space-x-2 bg-amber-50 border border-amber-200 px-4 py-3 rounded-2xl mb-4">
+            <ChevronsRight size={15} className="text-amber-600 shrink-0" />
+            <p className="text-xs font-bold text-amber-700 leading-relaxed">{leg.transferLabel}</p>
           </div>
         )}
 
         {/* What to Say box */}
-        <div className={`${bg} border p-4 rounded-2xl relative overflow-hidden shadow-sm`}>
+        <div className={`${bg} border p-5 rounded-2xl relative overflow-hidden shadow-sm`}>
           <div className="absolute top-0 left-0 w-1.5 h-full rounded-l-2xl" style={{ backgroundColor: leg.color }} />
-          <div className="flex items-start space-x-3 pl-1">
-            <MessageSquare size={17} className={`${text} shrink-0 mt-0.5`} />
-            <div>
-              <p className={`text-[10px] font-bold ${text} uppercase tracking-wider mb-1.5 opacity-80`}>What to say</p>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${pill}`}>{leg.vehicleLabel}</span>
-                <p className={`font-bold ${text} text-sm leading-snug`}>"{leg.whatToSay}"</p>
+          <div className="flex items-start space-x-3 pl-2">
+            <MessageSquare size={18} className={`${text} shrink-0 mt-0.5`} />
+            <div className="flex-1">
+              <p className={`text-[10px] font-bold ${text} uppercase tracking-wider mb-2 opacity-70`}>What to say</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${pill}`}>{leg.vehicleLabel}</span>
+                <p className={`font-bold ${text} text-sm leading-relaxed`}>"{leg.whatToSay}"</p>
               </div>
             </div>
           </div>
@@ -201,10 +204,10 @@ export const TripGuide: React.FC = () => {
 
       {/* Bottom Sheet */}
       <BottomSheet isOpen={true} snapPoints={[12, 60, 90]} initialSnap={1} onSnapChange={setSnapIndex}>
-        <div className="space-y-4 pt-2 pb-24 px-2">
+        <div className="space-y-6 pt-3 pb-28">
 
           {/* ── Header ── */}
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between px-1">
             <div className="flex items-center space-x-3">
               {snapIndex === 0 && (
                 <span className="relative flex h-3 w-3">
@@ -213,24 +216,24 @@ export const TripGuide: React.FC = () => {
                 </span>
               )}
               <div>
-                <h2 className={`text-xl font-black transition-colors ${snapIndex === 0 ? 'text-green-600' : 'text-[#1a00b2]'}`}>
+                <h2 className={`text-2xl font-black transition-colors ${snapIndex === 0 ? 'text-green-600' : 'text-[#1a00b2]'}`}>
                   {snapIndex === 0 ? 'In Route' : (selectedOption?.label ?? 'Trip Overview')}
                 </h2>
-                {selectedOption && <p className="text-xs text-gray-400">{selectedOption.tagline}</p>}
+                {selectedOption && <p className="text-sm text-gray-400 mt-0.5">{selectedOption.tagline}</p>}
               </div>
             </div>
 
             {/* Fare badge */}
-            <span className="bg-[#f2ca4b] text-[#1a00b2] px-3 py-1 rounded-full text-sm font-black shadow-sm shrink-0">
+            <span className="bg-[#f2ca4b] text-[#1a00b2] px-4 py-1.5 rounded-full text-base font-black shadow-sm shrink-0">
               ₱{totalFareMin}–{totalFareMax}
             </span>
           </div>
 
           {/* ── Subdivision alert ── */}
           {inSubdivision && (
-            <div className="bg-amber-50 border border-amber-200 p-3 rounded-2xl flex items-start space-x-2">
-              <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={16} />
-              <p className="text-xs text-amber-700 font-medium leading-relaxed">
+            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3">
+              <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={18} />
+              <p className="text-sm text-amber-700 font-medium leading-relaxed">
                 Village zone: Jeep/Bus restricted on interior roads. Follow legs in order.
               </p>
             </div>
@@ -243,7 +246,7 @@ export const TripGuide: React.FC = () => {
                 <button
                   key={leg.step}
                   onClick={() => setActiveStep(leg.step)}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-colors border ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold shrink-0 transition-colors border ${
                     activeStep === leg.step
                       ? 'text-white border-transparent'
                       : 'bg-white border-gray-200 text-gray-500'
@@ -251,7 +254,7 @@ export const TripGuide: React.FC = () => {
                   style={activeStep === leg.step ? { backgroundColor: leg.color, borderColor: leg.color } : {}}
                 >
                   <span>Leg {leg.step}</span>
-                  <span className="opacity-70">·</span>
+                  <span className="opacity-60">·</span>
                   <span>{leg.vehicleLabel}</span>
                 </button>
               ))}
@@ -266,20 +269,20 @@ export const TripGuide: React.FC = () => {
           </div>
 
           {/* ── Final walk step ── */}
-          <div className="flex space-x-4">
-            <div className="w-9 h-9 rounded-full bg-gray-800 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+          <div className="flex space-x-4 items-center">
+            <div className="w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
               {enrichedLegs.length + 1}
             </div>
             <div className="flex-1">
-              <p className="font-bold text-gray-800">Walk to Destination</p>
-              <p className="text-gray-400 text-sm">Arrive at {destination.display_name.split(',')[0]}.</p>
+              <p className="font-black text-gray-800">Walk to Destination</p>
+              <p className="text-gray-400 text-sm mt-0.5">Arrive at {destination.display_name.split(',')[0]}.</p>
             </div>
           </div>
 
           {/* ── Finish ── */}
           <button
             onClick={() => navigate('/home')}
-            className="w-full mt-2 bg-gray-900 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform shadow-md"
+            className="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform shadow-md text-base"
           >
             {t.trip.finish}
           </button>
