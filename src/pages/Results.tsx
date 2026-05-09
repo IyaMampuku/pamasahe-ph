@@ -17,17 +17,18 @@ const VEHICLE_ICONS: Record<string, React.ElementType> = {
 
 // ── Small "vehicle chain" pill row ──────────────────────────────────
 const LegChain: React.FC<{ legs: RouteLeg[] }> = ({ legs }) => (
-  <div className="flex items-center space-x-1 flex-wrap">
+  <div className="flex items-center space-x-2 flex-wrap">
     {legs.map((leg, i) => {
       const Icon = VEHICLE_ICONS[leg.vehicle] ?? Truck;
       return (
         <React.Fragment key={i}>
-          <div className="flex items-center space-x-1 px-2 py-0.5 rounded-full text-white text-[10px] font-bold"
-            style={{ backgroundColor: leg.color }}>
-            <Icon size={10} />
-            <span>{leg.vehicleLabel}</span>
+          <div className="flex items-center space-x-1.5 py-1 text-gray-500 font-bold">
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: leg.color }}>
+              <Icon size={12} />
+            </div>
+            <span className="text-[11px] tracking-tight">{leg.vehicleLabel}</span>
           </div>
-          {i < legs.length - 1 && <ChevronRight size={12} className="text-gray-400" />}
+          {i < legs.length - 1 && <ChevronRight size={14} className="text-gray-300" />}
         </React.Fragment>
       );
     })}
@@ -45,47 +46,49 @@ const OptionCard: React.FC<OptionCardProps> = ({ option, isTop, onSelect }) => {
   const { t } = useTranslation();
   return (
     <div
-      className={`bg-white p-5 rounded-3xl shadow-sm relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform ${
+      className={`bg-white p-6 rounded-[2.5rem] shadow-sm relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all duration-300 border-2 ${
         isTop
-          ? 'border-2 border-[#1a00b2]/30 shadow-lg'
-          : 'border border-gray-100 hover:border-gray-200'
+          ? 'border-[#1a00b2] shadow-md'
+          : 'border-white hover:border-gray-100'
       }`}
       onClick={() => onSelect(option)}
     >
       {/* Badge */}
-      <span className={`absolute top-0 right-0 text-[10px] font-black px-3 py-1 rounded-bl-xl border ${option.badgeColor}`}>
-        {option.badge}
-      </span>
+      {option.badge && (
+        <span className={`absolute top-0 right-0 text-[9px] font-black px-5 py-2 rounded-bl-[1.5rem] uppercase tracking-[0.15em] ${option.badgeColor}`}>
+          {option.badge}
+        </span>
+      )}
 
       {/* Title row */}
-      <div className="flex justify-between items-start mb-3 pr-14">
+      <div className="flex justify-between items-start mb-5 pr-16">
         <div>
-          <p className="font-black text-gray-900 text-base leading-tight">{option.label}</p>
-          <p className="text-xs text-gray-400 font-medium mt-0.5">{option.tagline}</p>
+          <p className="font-black text-gray-900 text-xl tracking-tight leading-tight">{option.label}</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.1em] mt-1.5">
+            {option.tagline}
+          </p>
         </div>
-        <div className="text-right shrink-0 ml-3">
-          <p className="font-black text-xl text-[#1a00b2]">{option.estimatedMinutes} {t.results.mins}</p>
+        <div className="text-right shrink-0">
+          <p className="font-black text-2xl text-[#1a00b2]">{option.estimatedMinutes}m</p>
         </div>
       </div>
 
       {/* Vehicle chain pills */}
-      <LegChain legs={option.legs} />
+      <div className="bg-gray-50/50 p-3 rounded-2xl mb-5">
+        <LegChain legs={option.legs} />
+      </div>
 
-      {/* Fare + CTA row */}
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1.5 text-xs font-bold text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
-            <CreditCard size={13} />
-            <span>₱{option.totalFareMin}–{option.totalFareMax}</span>
-          </div>
-          <div className="flex items-center space-x-1.5 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
-            <Clock size={13} />
-            <span>~{option.estimatedMinutes}m</span>
-          </div>
+      {/* Fare Row */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2 text-sm font-black text-gray-700 bg-gray-100/50 px-4 py-2 rounded-2xl">
+          <CreditCard size={15} className="text-[#1a00b2]" />
+          <span>₱{option.totalFareMin} – {option.totalFareMax}</span>
         </div>
-        <button className="text-xs font-black text-[#1a00b2] bg-[#1a00b2]/10 hover:bg-[#1a00b2]/20 px-3 py-1.5 rounded-xl transition-colors">
-          {t.results.startTrip}
-        </button>
+        
+        <div className="flex items-center text-[#1a00b2] font-black text-xs space-x-1.5 opacity-80 hover:opacity-100 transition-opacity">
+          <span>{t.results.startTrip}</span>
+          <ChevronRight size={14} strokeWidth={3} />
+        </div>
       </div>
     </div>
   );
@@ -126,7 +129,7 @@ export const Results: React.FC = () => {
         <p className="text-gray-500 font-medium mb-4">No destination selected.</p>
         <button
           onClick={() => navigate('/search')}
-          className="bg-[#1a00b2] text-white font-bold px-6 py-3 rounded-2xl"
+          className="bg-[#1a00b2] text-white font-bold px-6 py-3 rounded-2xl shadow-lg"
         >
           Back to Search
         </button>
@@ -144,57 +147,69 @@ export const Results: React.FC = () => {
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-50 overflow-hidden">
       {/* Header */}
-      <div className="bg-[#1a00b2] p-4 pt-6 text-white pb-10 shrink-0">
-        <div className="flex items-center space-x-3 mb-5">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
-            <ArrowLeft size={24} />
+      <div className="bg-white px-4 pt-8 pb-10 shrink-0 shadow-sm z-10">
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-600 active:scale-95 transition-transform">
+            <ArrowLeft size={20} />
           </button>
-          <h1 className="text-xl font-black">Route Options</h1>
+          <h1 className="text-lg font-black text-gray-900 tracking-tight">Trip Options</h1>
+          <div className="w-10" /> {/* Spacer */}
         </div>
 
-        <div className="flex items-center space-x-3 bg-white/10 p-3 rounded-2xl">
-          <MapPin size={22} className="text-[#f2ca4b] shrink-0" />
+        <div className="flex items-center space-x-4 bg-gray-50 p-4 rounded-3xl border border-gray-100">
+          <div className="w-10 h-10 bg-[#1a00b2]/10 rounded-2xl flex items-center justify-center shrink-0">
+            <MapPin size={20} className="text-[#1a00b2]" />
+          </div>
           <div className="overflow-hidden">
-            <p className="text-xs text-blue-200 font-medium">Destination</p>
-            <p className="font-bold truncate">{destName}</p>
+            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">To Destination</p>
+            <p className="font-black text-gray-800 truncate leading-tight">{destName}</p>
           </div>
         </div>
       </div>
 
       {/* Options List */}
-      <div className="flex-1 overflow-y-auto no-scrollbar -mt-5 px-4 pt-4 pb-24 space-y-4">
+      <div className="flex-1 overflow-y-auto no-scrollbar -mt-4 px-4 pt-6 pb-32 space-y-5 relative">
         {/* Highway restriction alert */}
           {hwDetect?.detected && (
-            <div className="bg-red-50 border border-red-200 p-4 rounded-2xl flex items-start space-x-3">
-              <span className="text-xl">🚫</span>
+            <div className="bg-red-50 border-2 border-red-100 p-5 rounded-[2rem] flex items-start space-x-4">
+              <div className="w-10 h-10 bg-red-100 rounded-2xl flex items-center justify-center shrink-0">
+                <AlertCircle size={20} className="text-red-600" />
+              </div>
               <div>
-                <p className="text-[11px] font-black text-red-800 uppercase tracking-widest mb-1">
-                  National Highway — Tricycle Restricted
+                <p className="text-[11px] font-black text-red-600 uppercase tracking-widest mb-1">
+                  Highway Restricted
                 </p>
-                <p className="text-sm text-red-700 font-medium leading-relaxed">
-                  Route crosses <strong>{hwDetect.highway?.name}</strong>. Tricycles are <strong>prohibited</strong> on this road. All options below enforce a Jeep/Bus switch at the highway entry.
+                <p className="text-sm text-red-800 font-bold leading-snug">
+                  Tricycles are not allowed on {hwDetect.highway?.shortName}.
                 </p>
-                <p className="text-xs text-red-600 font-bold mt-2 italic">"{hwDetect.kantoAdvice}"</p>
+                <p className="text-xs text-red-700/70 mt-2 font-medium">
+                  Routes below automatically include required Jeep/Bus transfers.
+                </p>
               </div>
             </div>
           )}
 
           {/* Subdivision alert */}
           {hasSubdivision && (
-          <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3">
-            <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={18} />
+          <div className="bg-amber-50 border-2 border-amber-100 p-5 rounded-[2rem] flex items-start space-x-4">
+            <div className="w-10 h-10 bg-amber-100 rounded-2xl flex items-center justify-center shrink-0">
+              <span className="text-lg">🏘️</span>
+            </div>
             <div>
-              <p className="text-[11px] font-black text-amber-800 uppercase tracking-widest mb-1">
-                Village Zone Detected
+              <p className="text-[11px] font-black text-amber-600 uppercase tracking-widest mb-1">
+                Subdivision Zone
               </p>
-              <p className="text-sm text-amber-700 leading-relaxed">
-                Route starts or ends inside a gated community. A <strong>Tricycle</strong> is required for the first/last mile.
+              <p className="text-sm text-amber-800 font-bold leading-snug">
+                Gated area detected. Tricycle required for the first/last mile.
               </p>
             </div>
           </div>
         )}
 
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">Choose your route</p>
+        <div className="flex items-center justify-between px-1">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Suggested Routes</p>
+          <div className="h-px bg-gray-200 flex-1 ml-4" />
+        </div>
 
         {routeOptions.map((opt, i) => (
           <OptionCard key={opt.id} option={opt} isTop={i === 0} onSelect={handleSelect} />

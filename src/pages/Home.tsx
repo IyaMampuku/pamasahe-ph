@@ -90,21 +90,21 @@ export const Home: React.FC = () => {
       {/* ── Floating buttons — sit ABOVE the sheet ── */}
       {/* Center button rises based on sheet height so it never overlaps */}
       <div
-        className="absolute right-4 z-40 transition-all duration-300"
-        style={{ bottom: `calc(${sheetSnap === 0 ? 14 : sheetSnap === 1 ? 55 : 90}vh + 12px)` }}
+        className="absolute right-5 z-40 transition-all duration-300"
+        style={{ bottom: `calc(${sheetSnap === 0 ? 14 : sheetSnap === 1 ? 55 : 90}vh + 20px)` }}
       >
-        <div className="flex flex-col space-y-3">
+        <div className="flex flex-col space-y-4">
           <button
             onClick={locateMe}
-            className="w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-2xl text-[#1a00b2] border border-gray-50 active:scale-90 transition-transform"
+            className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xl text-[#1a00b2] border border-gray-100 active:scale-90 transition-transform"
           >
-            <Crosshair size={28} />
+            <Crosshair size={24} />
           </button>
           <button
             onClick={() => navigate('/chat')}
-            className="w-14 h-14 bg-[#1a00b2] rounded-3xl flex items-center justify-center shadow-2xl text-white active:scale-90 transition-transform"
+            className="w-14 h-14 bg-[#1a00b2] rounded-2xl flex items-center justify-center shadow-xl text-white active:scale-90 transition-transform"
           >
-            <MessageSquare size={26} />
+            <MessageSquare size={24} />
           </button>
         </div>
       </div>

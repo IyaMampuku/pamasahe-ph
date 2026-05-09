@@ -192,13 +192,16 @@ export const TripGuide: React.FC = () => {
       </div>
 
 
-      {/* Center Button (behind sheet) */}
-      <div className="absolute bottom-64 right-4 z-10">
+      {/* Center Button — dynamic position to avoid sheet overlap */}
+      <div
+        className="absolute right-5 z-10 transition-all duration-300"
+        style={{ bottom: `calc(${snapIndex === 0 ? 12 : snapIndex === 1 ? 60 : 90}vh + 20px)` }}
+      >
         <button
           onClick={locateMe}
-          className="w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-2xl text-[#1a00b2] border border-gray-50 active:scale-90 transition-transform"
+          className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xl text-[#1a00b2] border border-gray-100 active:scale-90 transition-transform"
         >
-          <Crosshair size={28} />
+          <Crosshair size={24} />
         </button>
       </div>
 
