@@ -5,16 +5,16 @@ import { useLocation } from 'react-router-dom';
 
 type Message = {
   id: string;
-  sender: 'user' | 'team';
+  sender: 'user' | 'support';
   text: string;
   isForm?: boolean;
 };
 
-export const PamasaheGuide: React.FC = () => {
+export const SupportDesk: React.FC = () => {
   const routerLocation = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'init', sender: 'team', text: "Kumusta! I'm your Pamasahe Guide. Need help with your commute or want to report a missing terminal? I'm here for you!" }
+    { id: 'init', sender: 'support', text: 'Hi! I am the Pamasahe PH Support. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [showReward, setShowReward] = useState(false);
@@ -47,8 +47,8 @@ export const PamasaheGuide: React.FC = () => {
           ...prev,
           { 
             id: Date.now().toString(), 
-            sender: 'team', 
-            text: "I see! If you can't find a terminal or route, help the community by adding it here.",
+            sender: 'support', 
+            text: 'It seems you cannot find a terminal or route here. Help the community by reporting it to the developers!',
             isForm: true
           }
         ]);
@@ -57,8 +57,8 @@ export const PamasaheGuide: React.FC = () => {
           ...prev,
           { 
             id: Date.now().toString(), 
-            sender: 'team', 
-            text: "I can help you navigate or you can report missing routes to me. Just let me know what you need!"
+            sender: 'support', 
+            text: 'I can help you navigate or you can report missing routes and bugs directly to our developers.'
           }
         ]);
       }
@@ -74,8 +74,8 @@ export const PamasaheGuide: React.FC = () => {
         ...prev,
         { 
           id: Date.now().toString(), 
-          sender: 'team', 
-          text: 'Thank you! I have sent this information to the team for review. It will be added to the map soon.'
+          sender: 'support', 
+          text: 'Thank you! I have sent this report to our developers for review. It will be verified and added to the map soon.'
         }
       ]);
       setShowReward(true);
@@ -127,8 +127,8 @@ export const PamasaheGuide: React.FC = () => {
                     <MessageCircle size={20} />
                   </div>
                   <div>
-                    <h3 className="font-bold">Pamasahe Guide</h3>
-                    <p className="text-xs text-blue-200">Community Support</p>
+                    <h3 className="font-bold">Support Desk</h3>
+                    <p className="text-xs text-blue-200">Pamasahe PH</p>
                   </div>
                 </div>
                 <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -221,19 +221,28 @@ export const PamasaheGuide: React.FC = () => {
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               className="relative bg-gradient-to-b from-[#f2ca4b] to-[#f0b90b] w-full max-w-sm rounded-[2rem] p-8 text-center shadow-2xl overflow-hidden"
             >
+              {/* Confetti Background effect (simplified) */}
               <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #fff 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
+              
               <div className="relative z-10">
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg border-4 border-[#f2ca4b]/50">
                   <Gift size={40} className="text-[#1a00b2]" />
                 </div>
                 <h2 className="text-3xl font-black text-[#1a00b2] mb-2 tracking-tight">Success!</h2>
-                <p className="text-gray-900 font-medium mb-6">Thanks for helping the community! Here's a reward for your effort.</p>
+                <p className="text-gray-900 font-medium mb-6">Thanks for helping the community! Your report has been sent to our development team.</p>
+                
                 <div className="bg-white/90 backdrop-blur rounded-2xl p-4 mb-8 shadow-inner border border-white/50">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Your Reward</p>
-                  <p className="text-lg font-black text-[#1a00b2]">Free Ad-Block Trial</p>
-                  <p className="text-sm text-gray-600 font-medium mt-1">Enjoy an uninterrupted experience for 30 days.</p>
+                  <p className="text-lg font-black text-[#1a00b2]">Contributor Badge</p>
+                  <p className="text-sm text-gray-600 font-medium mt-1">Thank you for being part of Pamasahe PH.</p>
                 </div>
-                <button onClick={() => setShowReward(false)} className="w-full bg-[#1a00b2] text-white font-black text-lg py-4 rounded-2xl shadow-xl active:scale-95 transition-transform">Claim Reward</button>
+
+                <button 
+                  onClick={() => setShowReward(false)}
+                  className="w-full bg-[#1a00b2] text-white font-black text-lg py-4 rounded-2xl shadow-xl active:scale-95 transition-transform"
+                >
+                  Close
+                </button>
               </div>
             </motion.div>
           </div>

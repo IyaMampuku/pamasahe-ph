@@ -9,7 +9,7 @@ import { Search } from './pages/Search';
 import { Results } from './pages/Results';
 import { TripGuide } from './pages/TripGuide';
 import { useAuth } from './contexts/AuthContext';
-import { PamasaheGuide } from './components/ai/PamasaheGuide';
+import { SupportDesk } from './components/support/SupportDesk';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -34,7 +34,7 @@ export const App: React.FC = () => {
         
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <PamasaheGuide />
+      <SupportDesk />
     </BrowserRouter>
   );
 };
