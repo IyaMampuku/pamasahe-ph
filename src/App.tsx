@@ -8,6 +8,7 @@ import { Home } from './pages/Home';
 import { Search } from './pages/Search';
 import { Results } from './pages/Results';
 import { TripGuide } from './pages/TripGuide';
+import { Saved } from './pages/Saved';
 import { useAuth } from './contexts/AuthContext';
 import { SupportDesk } from './components/support/SupportDesk';
 import { HistoryProvider } from './contexts/HistoryContext';
@@ -32,6 +33,7 @@ export const App: React.FC = () => {
           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
           <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
+          <Route path="/saved" element={<ProtectedRoute><Saved /></ProtectedRoute>} />
           <Route path="/trip" element={<ProtectedRoute><TripGuide /></ProtectedRoute>} />
           
           <Route path="*" element={<Navigate to="/" replace />} />

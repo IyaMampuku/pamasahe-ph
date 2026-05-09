@@ -5,9 +5,12 @@ interface HistoryContextType {
   history: NominatimResult[];
   home: NominatimResult | null;
   work: NominatimResult | null;
+  favorites: NominatimResult[];
   addToHistory: (location: NominatimResult) => void;
   setHomeLocation: (location: NominatimResult) => void;
   setWorkLocation: (location: NominatimResult) => void;
+  toggleFavorite: (location: NominatimResult) => void;
+  isFavorite: (placeId: number) => boolean;
   clearHistory: () => void;
 }
 
@@ -26,10 +29,13 @@ export const HistoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const saved = localStorage.getItem('pamasahe_work');
     return saved ? JSON.parse(saved) : null;
   });
+  const [favorites, setFavorites] = useState<NominatimResult[]>(() => {
+    const saved = localStorage.getItem('pamasahe_favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const addToHistory = (location: NominatimResult) => {
     setHistory(prev => {
-      // Remove if already exists to move to top
       const filtered = prev.filter(item => item.place_id !== location.place_id);
       const newHistory = [location, ...filtered].slice(0, 10);
       localStorage.setItem('pamasahe_history', JSON.stringify(newHistory));
@@ -47,6 +53,22 @@ export const HistoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('pamasahe_work', JSON.stringify(location));
   };
 
+  const toggleFavorite = (location: NominatimResult) => {
+    setFavorites(prev => {
+      const exists = prev.some(item => item.place_id === location.place_id);
+      let newFavs;
+      if (exists) {
+        newFavs = prev.filter(item => item.place_id !== location.place_id);
+      } else {
+        newFavs = [location, ...prev];
+      }
+      localStorage.setItem('pamasahe_favorites', JSON.stringify(newFavs));
+      return newFavs;
+    });
+  };
+
+  const isFavorite = (placeId: number) => favorites.some(item => item.place_id === placeId);
+
   const clearHistory = () => {
     setHistory([]);
     localStorage.removeItem('pamasahe_history');
@@ -54,8 +76,8 @@ export const HistoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <HistoryContext.Provider value={{ 
-      history, home, work, 
-      addToHistory, setHomeLocation, setWorkLocation, clearHistory 
+      history, home, work, favorites,
+      addToHistory, setHomeLocation, setWorkLocation, toggleFavorite, isFavorite, clearHistory 
     }}>
       {children}
     </HistoryContext.Provider>

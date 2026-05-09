@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import { useNavigate, useLocation as useRouteLocation } from 'react-router-dom';
-import { ArrowLeft, MapPin, CreditCard, AlertCircle, ChevronRight, Bike, Truck, Bus, Train } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, AlertCircle, ChevronRight, Bike, Truck, Bus, Train, Star } from 'lucide-react';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useLocation } from '../contexts/LocationContext';
+import { useHistory } from '../contexts/HistoryContext';
 import { generateRouteOptions, detectHighwayInRoute } from '../services/TransitLogic';
 import type { RouteOption, RouteLeg } from '../services/TransitLogic';
 import type { NominatimResult } from '../services/api';
@@ -99,6 +100,7 @@ export const Results: React.FC = () => {
   const navigate       = useNavigate();
   const routeLocation  = useRouteLocation();
   const { location: userCoords } = useLocation();
+  const { toggleFavorite, isFavorite } = useHistory();
 
   const destination = routeLocation.state?.destination as NominatimResult | undefined;
 
@@ -156,14 +158,26 @@ export const Results: React.FC = () => {
           <div className="w-10" /> {/* Spacer */}
         </div>
 
-        <div className="flex items-center space-x-4 bg-gray-50 p-4 rounded-3xl border border-gray-100">
-          <div className="w-10 h-10 bg-[#1a00b2]/10 rounded-2xl flex items-center justify-center shrink-0">
-            <MapPin size={20} className="text-[#1a00b2]" />
+        <div className="flex items-center space-x-3">
+          <div className="flex-1 flex items-center space-x-4 bg-gray-50 p-4 rounded-3xl border border-gray-100">
+            <div className="w-10 h-10 bg-[#1a00b2]/10 rounded-2xl flex items-center justify-center shrink-0">
+              <MapPin size={20} className="text-[#1a00b2]" />
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">To Destination</p>
+              <p className="font-black text-gray-800 truncate leading-tight">{destName}</p>
+            </div>
           </div>
-          <div className="overflow-hidden">
-            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">To Destination</p>
-            <p className="font-black text-gray-800 truncate leading-tight">{destName}</p>
-          </div>
+          <button 
+            onClick={() => destination && toggleFavorite(destination)}
+            className={`w-14 h-14 rounded-3xl flex items-center justify-center transition-all duration-300 shadow-sm border ${
+              destination && isFavorite(destination.place_id)
+                ? 'bg-yellow-400 border-yellow-300 text-[#1a00b2]' 
+                : 'bg-white border-gray-100 text-gray-300'
+            }`}
+          >
+            <Star size={24} fill={destination && isFavorite(destination.place_id) ? "currentColor" : "none"} />
+          </button>
         </div>
       </div>
 
