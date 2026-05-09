@@ -54,7 +54,6 @@ interface LeafletMapProps {
   route?:          Coordinates[];
   routeColor?:     string;
   routeLegs?:      LeafletMapLeg[];
-  highwayWarning?: string;   // When set, shows tricycle-restricted overlay
   zoom?:           number;
   className?:      string;
 }
@@ -65,7 +64,6 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   route   = [],
   routeColor = '#1a00b2',
   routeLegs,
-  highwayWarning,
   zoom = 14,
   className = 'w-full h-full z-0',
 }) => {
@@ -125,14 +123,6 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         ))}
       </MapContainer>
 
-      {/* Highway restriction warning overlay — Minimalist floating pill */}
-      {highwayWarning && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[500] pointer-events-none w-full px-10">
-          <div className="bg-red-500/95 backdrop-blur-md text-white text-[10px] font-black px-4 py-2 rounded-full shadow-lg flex items-center justify-center space-x-2 uppercase tracking-widest border border-red-400/30 mx-auto max-w-max">
-            <span>{highwayWarning}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

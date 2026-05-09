@@ -8,7 +8,7 @@ import { useLocation, type Coordinates } from '../contexts/LocationContext';
 import { getRoute, type RouteData, type NominatimResult } from '../services/api';
 import { LeafletMap } from '../components/map/LeafletMap';
 import { BottomSheet } from '../components/layout/BottomSheet';
-import { splitGeometry, detectHighwayInRoute } from '../services/TransitLogic';
+import { splitGeometry } from '../services/TransitLogic';
 import type { RouteOption, RouteLeg } from '../services/TransitLogic';
 
 // ── Style helpers ───────────────────────────────────────────────────
@@ -158,12 +158,6 @@ export const TripGuide: React.FC = () => {
   const inSubdivision = enrichedLegs.some(l => l.fareType === 'special');
 
   // Highway warning for map overlay: show if a tricycle-only route would cross a highway
-  const hwDetect = location && destination
-    ? detectHighwayInRoute(location, destCoords, destination.display_name)
-    : null;
-  const hwMapWarning = hwDetect?.detected
-    ? `Tricycles restricted on ${hwDetect.highway?.shortName}. Switching to Jeep/Bus.`
-    : undefined;
 
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-100 overflow-hidden relative">
@@ -186,23 +180,29 @@ export const TripGuide: React.FC = () => {
           routeLegs={hasLegs ? mapLegs : undefined}
           route={!hasLegs ? routeData?.geometry : undefined}
           routeColor="#1a00b2"
-          highwayWarning={hwMapWarning}
           zoom={15}
         />
       </div>
 
 
-      {/* Center Button — dynamic position to avoid sheet overlap */}
       <div
         className="absolute right-6 z-10 transition-all duration-300"
         style={{ bottom: `calc(${snapIndex === 0 ? 12 : snapIndex === 1 ? 60 : 90}vh + 24px)` }}
       >
-        <button
-          onClick={locateMe}
-          className="w-14 h-14 bg-white rounded-[1.25rem] flex items-center justify-center shadow-lg text-[#1a00b2] border border-gray-100 active:scale-95 transition-all duration-200"
-        >
-          <Crosshair size={24} strokeWidth={2.5} />
-        </button>
+        <div className="flex flex-col space-y-4">
+          <button
+            onClick={locateMe}
+            className="w-14 h-14 bg-white rounded-[1.25rem] flex items-center justify-center shadow-lg text-[#1a00b2] border border-gray-100 active:scale-95 transition-all duration-200"
+          >
+            <Crosshair size={24} strokeWidth={2.5} />
+          </button>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-support'))}
+            className="w-14 h-14 bg-[#1a00b2] rounded-[1.25rem] flex items-center justify-center shadow-lg text-white active:scale-95 transition-all duration-200"
+          >
+            <MessageSquare size={24} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
 
       {/* Bottom Sheet */}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, MapPin, Bus, DollarSign, Gift } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
 
 type Message = {
   id: string;
@@ -11,7 +10,6 @@ type Message = {
 };
 
 export const SupportDesk: React.FC = () => {
-  const routerLocation = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: 'init', sender: 'support', text: 'Hi! I am the Pamasahe PH Support. How can I help you today?' }
@@ -82,24 +80,14 @@ export const SupportDesk: React.FC = () => {
     }, 800);
   };
 
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-support', handleOpen);
+    return () => window.removeEventListener('open-support', handleOpen);
+  }, []);
+
   return (
     <>
-      {/* Floating Action Button */}
-      <AnimatePresence>
-        {(routerLocation.pathname === '/home' || routerLocation.pathname === '/trip') && !isOpen && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-48 right-4 z-10 w-14 h-14 bg-[#1a00b2] text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center border-2 border-white/20"
-          >
-            <MessageCircle size={28} />
-          </motion.button>
-        )}
-      </AnimatePresence>
 
       {/* Chat Window Overlay */}
       <AnimatePresence>

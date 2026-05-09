@@ -100,7 +100,7 @@ export const Home: React.FC = () => {
             <Crosshair size={24} strokeWidth={2.5} />
           </button>
           <button
-            onClick={() => navigate('/chat')}
+            onClick={() => window.dispatchEvent(new CustomEvent('open-support'))}
             className="w-14 h-14 bg-[#1a00b2] rounded-[1.25rem] flex items-center justify-center shadow-lg text-white active:scale-95 transition-all duration-200"
           >
             <MessageSquare size={24} strokeWidth={2.5} />
