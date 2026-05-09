@@ -129,9 +129,9 @@ export const TripGuide: React.FC = () => {
         // Split geometry proportionally between legs
         const legs = selectedOption?.legs ?? [];
         if (legs.length > 0) {
-          const ratios = legs.map(l => l.legRatio);
+          const ratios = legs.map((l: RouteLeg) => l.legRatio);
           const paths  = splitGeometry(data.geometry, ratios);
-          setEnrichedLegs(legs.map((leg, i) => ({ ...leg, path: paths[i] ?? [] })));
+          setEnrichedLegs(legs.map((leg: RouteLeg, i: number) => ({ ...leg, path: paths[i] ?? [] })));
         }
       });
     }

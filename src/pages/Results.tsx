@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigate, useLocation as useRouteLocation } from 'react-router-dom';
-import { ArrowLeft, MapPin, Clock, CreditCard, AlertCircle, ChevronRight, Bike, Truck, Bus, Train } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, AlertCircle, ChevronRight, Bike, Truck, Bus, Train } from 'lucide-react';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useLocation } from '../contexts/LocationContext';
 import { generateRouteOptions, detectHighwayInRoute } from '../services/TransitLogic';
@@ -142,7 +142,7 @@ export const Results: React.FC = () => {
   };
 
   const destName = destination.display_name.split(',')[0];
-  const hasSubdivision = routeOptions[0]?.legs.some(l => l.fareType === 'special');
+  const hasSubdivision = routeOptions[0]?.legs.some((l: RouteLeg) => l.fareType === 'special');
 
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-50 overflow-hidden">

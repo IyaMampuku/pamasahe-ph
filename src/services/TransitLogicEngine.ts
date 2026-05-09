@@ -11,6 +11,8 @@ import {
   type TransitPlan,
 } from './TransitLogicBase';
 
+export * from './TransitLogicBase';
+
 // ─────────────────────────────────────────────────────────────────
 //  SPEED CONSTANTS
 // ─────────────────────────────────────────────────────────────────
