@@ -47,16 +47,15 @@ const lastMileWalk = (distKm: number, endSubdiv: SubdivisionZone | null) =>
 function buildOptionA(ctx: Ctx, mainV: 'jeepney' | 'bus'): RouteLeg[] {
   const { startLabel, destName, startSubdiv, endSubdiv, hw, distKm, IR } = ctx;
   const legs: RouteLeg[] = [];
-  let s = 1;
 
   // ─ Leg 1: Interior / Kanto approach ─
   if (startSubdiv) {
-    legs.push(makeLeg(s++, 'tricycle', startLabel, startSubdiv.gateName,
+    legs.push(makeLeg(legs.length + 1, 'tricycle', startLabel, startSubdiv.gateName,
       startSubdiv.fareMin, startSubdiv.fareMax, 'special',
       `Pahatid po sa ${startSubdiv.gateName}.`,
       true, IR, `Board ${mainV === 'bus' ? 'Bus' : 'Jeepney'} at ${startSubdiv.gateName}`));
   } else if (hw.detected) {
-    legs.push(makeLeg(s++, 'tricycle', startLabel, hw.kantoLabel,
+    legs.push(makeLeg(legs.length + 1, 'tricycle', startLabel, hw.kantoLabel,
       25, 40, 'standard',
       `Pahatid po sa ${hw.kantoLabel}.`,
       true, 0.20, `Board ${mainV === 'bus' ? 'Bus' : 'Jeepney'} dito sa kanto`));
@@ -71,7 +70,7 @@ function buildOptionA(ctx: Ctx, mainV: 'jeepney' | 'bus'): RouteLeg[] {
     1 - IR * ((startSubdiv ? 1 : 0) + (endSubdiv ? 1 : 0)) -
     (hw.detected && !startSubdiv ? 0.20 : 0));
 
-  legs.push(makeLeg(s++, mainV, fromNode, toNode,
+  legs.push(makeLeg(legs.length + 1, mainV, fromNode, toNode,
     mainV === 'bus' ? 15 : 13,
     mainV === 'bus' ? 25 : 15, 'standard',
     `${hwNote}Bayad po, isa hanggang ${toNode}.`,
@@ -81,11 +80,11 @@ function buildOptionA(ctx: Ctx, mainV: 'jeepney' | 'bus'): RouteLeg[] {
 
   // ─ Leg 3: Last mile ─
   if (endSubdiv) {
-    legs.push(makeLeg(s++, 'tricycle', endSubdiv.gateName, destName,
+    legs.push(makeLeg(legs.length + 1, 'tricycle', endSubdiv.gateName, destName,
       endSubdiv.fareMin, endSubdiv.fareMax, 'special',
       `Pahatid po sa loob ng ${endSubdiv.name}, sa ${destName}.`, false, IR));
   } else if (walkFinal) {
-    legs.push(makeLeg(s++, 'walking', toNode, destName,
+    legs.push(makeLeg(legs.length + 1, 'walking', toNode, destName,
       0, 0, 'standard', `Lakad na lang po hanggang ${destName}. Malapit na!`, false, 0.05));
   }
 
@@ -99,21 +98,20 @@ function buildOptionA(ctx: Ctx, mainV: 'jeepney' | 'bus'): RouteLeg[] {
 function buildOptionB(ctx: Ctx): RouteLeg[] {
   const { startLabel, destName, hw, distKm } = ctx;
   const legs: RouteLeg[] = [];
-  let s = 1;
 
   const stop = hw.detected ? hw.kantoLabel : 'Nearest Jeepney Stop';
 
-  legs.push(makeLeg(s++, 'walking', startLabel, stop,
+  legs.push(makeLeg(legs.length + 1, 'walking', startLabel, stop,
     0, 0, 'standard', `Lakad po hanggang ${stop}.`,
     true, 0.15, `Board Jeepney dito`));
 
   const walkFinal = lastMileWalk(distKm, null);
-  legs.push(makeLeg(s++, 'jeepney', stop, destName,
+  legs.push(makeLeg(legs.length + 1, 'jeepney', stop, destName,
     13, 15, 'standard', `Bayad po, isa hanggang ${destName}.`,
     walkFinal, 0.75, walkFinal ? `Walk to ${destName}` : undefined));
 
   if (walkFinal) {
-    legs.push(makeLeg(s++, 'walking', destName, destName,
+    legs.push(makeLeg(legs.length + 1, 'walking', destName, destName,
       0, 0, 'standard', `Lakad na lang po hanggang ${destName}. Kaunti na lang!`, false, 0.10));
   }
 
@@ -129,17 +127,16 @@ function buildOptionC(ctx: Ctx): RouteLeg[] | null {
   if (hw.detected) return null;   // HARD BLOCK
 
   const legs: RouteLeg[] = [];
-  let s = 1;
   const base = Math.max(Math.round(distKm * 12), 50);
 
   if (startSubdiv) {
-    legs.push(makeLeg(s++, 'tricycle', startLabel, startSubdiv.gateName,
+    legs.push(makeLeg(legs.length + 1, 'tricycle', startLabel, startSubdiv.gateName,
       startSubdiv.fareMin, startSubdiv.fareMax, 'special',
       `Pahatid po sa ${startSubdiv.gateName}. Mag-special na papunta ${destName}.`,
       true, IR, `Arrange 2nd Tricycle at ${startSubdiv.gateName}`));
   }
 
-  legs.push(makeLeg(s++, 'tricycle',
+  legs.push(makeLeg(legs.length + 1, 'tricycle',
     startSubdiv ? startSubdiv.gateName : startLabel,
     endSubdiv   ? endSubdiv.gateName   : destName,
     base, base + 40, 'special',
@@ -148,7 +145,7 @@ function buildOptionC(ctx: Ctx): RouteLeg[] | null {
     endSubdiv ? `Enter ${endSubdiv.name}` : undefined));
 
   if (endSubdiv) {
-    legs.push(makeLeg(s++, 'tricycle', endSubdiv.gateName, destName,
+    legs.push(makeLeg(legs.length + 1, 'tricycle', endSubdiv.gateName, destName,
       endSubdiv.fareMin, endSubdiv.fareMax, 'special',
       `Pahatid po sa loob ng ${endSubdiv.name}, sa ${destName}.`, false, IR));
   }
