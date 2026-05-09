@@ -5,16 +5,16 @@ import { useLocation } from 'react-router-dom';
 
 type Message = {
   id: string;
-  sender: 'user' | 'ai';
+  sender: 'user' | 'team';
   text: string;
   isForm?: boolean;
 };
 
-export const AIChatbot: React.FC = () => {
+export const PamasaheGuide: React.FC = () => {
   const routerLocation = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'init', sender: 'ai', text: "Kumusta! I'm your Pamasahe Guide. Need help with your commute or want to report a missing terminal? I'm here for you!" }
+    { id: 'init', sender: 'team', text: "Kumusta! I'm your Pamasahe Guide. Need help with your commute or want to report a missing terminal? I'm here for you!" }
   ]);
   const [input, setInput] = useState('');
   const [showReward, setShowReward] = useState(false);
@@ -47,7 +47,7 @@ export const AIChatbot: React.FC = () => {
           ...prev,
           { 
             id: Date.now().toString(), 
-            sender: 'ai', 
+            sender: 'team', 
             text: "I see! If you can't find a terminal or route, help the community by adding it here.",
             isForm: true
           }
@@ -57,7 +57,7 @@ export const AIChatbot: React.FC = () => {
           ...prev,
           { 
             id: Date.now().toString(), 
-            sender: 'ai', 
+            sender: 'team', 
             text: "I can help you navigate or you can report missing routes to me. Just let me know what you need!"
           }
         ]);
@@ -74,7 +74,7 @@ export const AIChatbot: React.FC = () => {
         ...prev,
         { 
           id: Date.now().toString(), 
-          sender: 'ai', 
+          sender: 'team', 
           text: 'Thank you! I have sent this information to the team for review. It will be added to the map soon.'
         }
       ]);
@@ -221,28 +221,19 @@ export const AIChatbot: React.FC = () => {
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               className="relative bg-gradient-to-b from-[#f2ca4b] to-[#f0b90b] w-full max-w-sm rounded-[2rem] p-8 text-center shadow-2xl overflow-hidden"
             >
-              {/* Confetti Background effect (simplified) */}
               <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #fff 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
-              
               <div className="relative z-10">
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg border-4 border-[#f2ca4b]/50">
                   <Gift size={40} className="text-[#1a00b2]" />
                 </div>
                 <h2 className="text-3xl font-black text-[#1a00b2] mb-2 tracking-tight">Success!</h2>
                 <p className="text-gray-900 font-medium mb-6">Thanks for helping the community! Here's a reward for your effort.</p>
-                
                 <div className="bg-white/90 backdrop-blur rounded-2xl p-4 mb-8 shadow-inner border border-white/50">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Your Reward</p>
                   <p className="text-lg font-black text-[#1a00b2]">Free Ad-Block Trial</p>
                   <p className="text-sm text-gray-600 font-medium mt-1">Enjoy an uninterrupted experience for 30 days.</p>
                 </div>
-
-                <button 
-                  onClick={() => setShowReward(false)}
-                  className="w-full bg-[#1a00b2] text-white font-black text-lg py-4 rounded-2xl shadow-xl active:scale-95 transition-transform"
-                >
-                  Claim Reward
-                </button>
+                <button onClick={() => setShowReward(false)} className="w-full bg-[#1a00b2] text-white font-black text-lg py-4 rounded-2xl shadow-xl active:scale-95 transition-transform">Claim Reward</button>
               </div>
             </motion.div>
           </div>

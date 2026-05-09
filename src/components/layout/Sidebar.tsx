@@ -235,7 +235,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   </div>
                   <div className="bg-gray-50 rounded-2xl p-4 mb-6 max-h-60 overflow-y-auto">
                     <p className="text-sm text-gray-600 space-y-2">
-                      <span className="font-bold text-[#1a00b2] block mb-1">✨ AI Summary</span>
+                      <span className="font-bold text-[#1a00b2] block mb-1">✨ Privacy Summary</span>
                       We collect basic location data to provide accurate transit routes. Your profile data is stored securely and never sold to third parties. 
                       <br/><br/>
                       By using Pamasahe PH, you agree to our standard terms of service. For full details, please visit our website.
