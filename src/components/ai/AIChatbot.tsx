@@ -14,7 +14,7 @@ export const AIChatbot: React.FC = () => {
   const routerLocation = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'init', sender: 'ai', text: 'Hi! I am the Pamasahe PH Assistant. How can I help you today?' }
+    { id: 'init', sender: 'ai', text: "Kumusta! I'm your Pamasahe Guide. Need help with your commute or want to report a missing terminal? I'm here for you!" }
   ]);
   const [input, setInput] = useState('');
   const [showReward, setShowReward] = useState(false);
@@ -48,7 +48,7 @@ export const AIChatbot: React.FC = () => {
           { 
             id: Date.now().toString(), 
             sender: 'ai', 
-            text: 'It seems you cannot find a terminal or route here. Help the community by adding it!',
+            text: "I see! If you can't find a terminal or route, help the community by adding it here.",
             isForm: true
           }
         ]);
@@ -58,7 +58,7 @@ export const AIChatbot: React.FC = () => {
           { 
             id: Date.now().toString(), 
             sender: 'ai', 
-            text: 'I can help you navigate or you can report missing routes to me.'
+            text: "I can help you navigate or you can report missing routes to me. Just let me know what you need!"
           }
         ]);
       }
@@ -75,7 +75,7 @@ export const AIChatbot: React.FC = () => {
         { 
           id: Date.now().toString(), 
           sender: 'ai', 
-          text: 'Thank you! I have sent this information to the admins for review. It will be added to the map soon.'
+          text: 'Thank you! I have sent this information to the team for review. It will be added to the map soon.'
         }
       ]);
       setShowReward(true);
@@ -127,8 +127,8 @@ export const AIChatbot: React.FC = () => {
                     <MessageCircle size={20} />
                   </div>
                   <div>
-                    <h3 className="font-bold">AI Assistant</h3>
-                    <p className="text-xs text-blue-200">Pamasahe PH</p>
+                    <h3 className="font-bold">Pamasahe Guide</h3>
+                    <p className="text-xs text-blue-200">Community Support</p>
                   </div>
                 </div>
                 <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">

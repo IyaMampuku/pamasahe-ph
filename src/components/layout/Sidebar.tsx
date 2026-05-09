@@ -89,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 </button>
 
                 <div className="px-4 mt-6 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Support</div>
-                <MenuItem icon={<Info size={20} />} label="Help Center" onClick={() => setActiveModal('help')} />
+                <MenuItem icon={<Info size={20} />} label="Bayanihan Support" onClick={() => setActiveModal('help')} />
                 <MenuItem icon={<Shield size={20} />} label="Privacy Policy" onClick={() => setActiveModal('privacy')} />
               </div>
 
@@ -256,11 +256,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     <div className="p-3 bg-blue-50 text-[#1a00b2] rounded-2xl">
                       <MessageSquareWarning size={24} />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">AI Help Center</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Bayanihan Support</h3>
                   </div>
                   <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 mb-6">
                     <p className="text-sm text-gray-700">
-                      Hi! I'm your AI assistant. Have a bug to report or need help navigating? Describe the issue below and I'll log it for the team.
+                      Tao po! Kumusta? Need help with your commute or want to report a bug? Describe it below and our community team will help you out as soon as possible.
                     </p>
                     <textarea 
                       placeholder="Describe the issue..." 
